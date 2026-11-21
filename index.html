@@ -3894,6 +3894,7 @@ function drawLanes(c,t,dt){S.beacons_n=0; // silent air traffic at many depths, 
     const vis=L.list.filter(k=>{const X=camX+(k.x+sh-camX)*zm;return X>vx0-40&&X<vx1+40;});if(!vis.length)continue;   // no cars in view: no masking needed
     drawOccluded(c,L.z,()=>{layerT(c,pp);if(L.cine)c.globalAlpha*=F;
       const ys=vis.map(k=>L.y+Math.sin(k.x/180+k.bob)*L.amp);
+      if(S.laneCar){const cl=(16*s2+4)/16;S.laneCar(c,{vis,ys,dir:L.dir,s2,cl,px:16*cl*zm*scale*dpr,t,hd:HD(),body:(x,y,sc)=>{c.save();c.translate(x,y);c.scale(sc*L.dir,sc);stamp(c,SPR.car,false);c.restore();},light});return;}   // (review: a page can draw the lane cars its own way, FPSkyline.set({laneCar}); without it, as below)
       c.strokeStyle='rgba(220,235,255,.18)';c.lineWidth=.9;c.beginPath();
       vis.forEach((k,i)=>{c.moveTo(k.x,ys[i]);c.lineTo(k.x-L.dir*(14+30*s2),ys[i]-Math.cos(k.x/180+k.bob)*L.amp*.1);});c.stroke();
       const disc=(col,dx,r)=>{c.fillStyle=col;c.beginPath();vis.forEach((k,i)=>{const x=k.x+dx;c.moveTo(x+r,ys[i]);c.arc(x,ys[i],r,0,Math.PI*2);});c.fill();};
@@ -4080,17 +4081,19 @@ function drawSirens(c,t){
     if(moving>.05){const hb=c.createLinearGradient(14,0,120,0);hb.addColorStop(0,`rgba(255,245,225,${.28*moving*env})`);hb.addColorStop(1,'rgba(255,245,225,0)');
       c.fillStyle=hb;c.beginPath();c.moveTo(14,-2);c.lineTo(120,-22);c.lineTo(120,18);c.lineTo(14,3);c.fill();
       beamRain(c,14,.5,120,-2,2.5,20,.5*moving*env,t,1.1,'235,240,250',face);}
-    if(HD()){c.save();c.globalAlpha*=env;stamp(c,SPR.siren,false);c.restore();}
+    let own=false;if(S.sirenBody){c.save();own=S.sirenBody(c,{env,hover,moving,hd:HD(),t,u,light,on,ca,cb,col})===true;c.restore();}   // (review: a page can draw the craft its own way, FPSkyline.set({sirenBody}); without it, as below)
+    else if(HD()){c.save();c.globalAlpha*=env;stamp(c,SPR.siren,false);c.restore();}
     else{c.fillStyle=`rgba(6,8,14,${.9*env})`;c.beginPath();c.moveTo(-24,3);c.quadraticCurveTo(-22,-7,-8,-8);c.lineTo(10,-7);c.quadraticCurveTo(20,-4,22,1);
     c.quadraticCurveTo(12,6,-4,6);c.lineTo(-22,6);c.closePath();c.fill();}
-    c.fillStyle=`rgba(255,250,235,${env})`;c.beginPath();c.arc(20,0,1.4,0,7);c.fill();
+    if(!own){c.fillStyle=`rgba(255,250,235,${env})`;c.beginPath();c.arc(20,0,1.4,0,7);c.fill();   // (a review page's craft may draw its own lights)
     const lb=on?[1,.15]:[.15,1];
     dot(c,-6,-9,2.8,ca.replace('A',lb[0]*env));dot(c,4,-9,2.8,cb.replace('A',lb[1]*env));
-    light(c,-1,-9,22,col,.8*env);
+    light(c,-1,-9,22,col,.8*env);}
     });fin();
   }
 }
 function spinnerShape(c,x,y,s,dir,glow,pulse,beacon,rim=0,tint=0){
+  if(S.spinnerShape)return S.spinnerShape(c,{x,y,s,dir,glow,pulse,beacon,rim,tint,light,dot,beamRain});   // (review: a page can draw the spinners its own way, FPSkyline.set({spinnerShape}); without it, as below)
   c.save();c.translate(x,y);c.scale(s*dir,s);
   const bg=c.createLinearGradient(40,0,420,0);bg.addColorStop(0,`rgba(255,245,225,${.32*glow})`);bg.addColorStop(1,'rgba(255,245,225,0)');
   c.fillStyle=bg;c.beginPath();c.moveTo(48,-4);c.lineTo(420,-70);c.lineTo(420,60);c.lineTo(48,6);c.fill();
@@ -8249,21 +8252,23 @@ const PROF={car:{p:[[-.5,.32],[-.5,.64],[-.45,.79],[-.25,.85],[-.13,1.33],[.13,1
   van:{p:[[-.5,.32],[-.5,1.82],[-.44,1.96],[.26,1.96],[.42,1.25],[.5,1],[.5,.32]],glass:[[-.4,1.28],[-.4,1.8],[.24,1.8],[.38,1.28]],win:[3,4]},
   bus:{p:[[-.5,.3],[-.5,2.98],[-.47,3.08],[.47,3.08],[.5,2.96],[.5,.3]],glass:[[-.46,1.32],[-.46,2.62],[.47,2.62],[.47,1.32]],win:[4]}};
 PROF.taxi=PROF.car;
-function solid(q,V,o,c){const {X,Y,alt,ppm}=V,K0=KINDS[c.kind],L=K0.L,w=K0.w,pr=PROF[c.kind],px=-o.hd,pd=o.hx,k=ppm(o.d);
+let CARS2=null;   // (review: a page can give the cars its own shapes and draw what their lift does to the street, setCars({prof, extra}); without it, as here)
+function solid(q,V,o,c){const {X,Y,alt,ppm}=V,K0=KINDS[c.kind],L=K0.L,w=K0.w,pr=(CARS2&&CARS2.prof&&CARS2.prof[c.kind])||PROF[c.kind],px=-o.hd,pd=o.hx,k=ppm(o.d);
   const W3=(u,t,a)=>{const x=o.x+o.hx*L*u+px*w/2*t,d=o.d+o.hd*L*u+pd*w/2*t;return[X(x,d),Y(a,d)];};
   const sideT=(px*(-(o.x+px*w/2))+pd*(-(o.d+pd*w/2)))>0?1:-1;   // the side that faces you
   const P=pr.p,n=P.length;
   for(let i=0;i<n;i++){const a=P[i],b=P[(i+1)%n],du=b[0]-a[0],da=b[1]-a[1],nu=-da,na=du*L,mu=(a[0]+b[0])/2,ma=(a[1]+b[1])/2;   // each strip round the profile: roof, glass, nose, tail
     const nx=o.hx*nu,nd=o.hd*nu,cx=o.x+o.hx*L*mu,cd=o.d+o.hd*L*mu;if(nx*(-cx)+na*(alt-ma)+nd*(-cd)<=0)continue;
-    const glass=pr.win.includes(i),up=na/Math.hypot(nu,na);poly(q,glass?'rgba(34,48,72,.96)':up>.6?'#1e2130':'#151822',[W3(a[0],1,a[1]),W3(b[0],1,b[1]),W3(b[0],-1,b[1]),W3(a[0],-1,a[1])]);
+    const glass=pr.win.includes(i),up=na/Math.hypot(nu,na),sh=CARS2&&CARS2.shade?CARS2.shade(c.kind,i,up,glass):null;poly(q,sh||(glass?'rgba(34,48,72,.96)':up>.6?'#1e2130':'#151822'),[W3(a[0],1,a[1]),W3(b[0],1,b[1]),W3(b[0],-1,b[1]),W3(a[0],-1,a[1])]);
     if(glass&&up>.3){q.strokeStyle='rgba(180,210,255,.18)';q.lineWidth=1;q.beginPath();q.moveTo(...W3(a[0],.6,a[1]));q.lineTo(...W3(b[0],.6,b[1]));q.stroke();}}   // (a glint on the glass)
-  poly(q,c.tint,P.map(([u,a])=>W3(u,sideT,a)));   // its side
+  if(CARS2&&CARS2.side)CARS2.side(q,{W3,sideT,pr,c,k,P});else poly(q,c.tint,P.map(([u,a])=>W3(u,sideT,a)));   // its side (review: a page's own finish, setCars({side}))
   if(c.kind==='bus'){const gp=pr.glass.map(([u,a])=>W3(u,sideT,a)),g=q.createLinearGradient(gp[0][0],gp[1][1],gp[0][0],gp[0][1]);g.addColorStop(0,'rgba(255,196,140,.5)');g.addColorStop(1,'rgba(255,170,110,.68)');poly(q,g,gp);}
   else poly(q,'rgba(40,56,82,.95)',pr.glass.map(([u,a])=>W3(u,sideT,a)));   // its side windows (a bus's lit warm from inside)
   if(c.kind==='bus'){q.fillStyle='rgba(14,12,18,.88)';for(let i=0;i<8;i++){const [hx,hy]=W3(.38-i*.11,sideT,1.75);q.beginPath();q.arc(hx,hy,k*.17,0,TAU);q.fill();q.fillRect(hx-k*.17,hy,k*.34,k*.4);}   // people inside
     q.strokeStyle='rgba(20,22,30,.9)';q.lineWidth=Math.max(1,k*.05);for(let u=-.4;u<.47;u+=.11){q.beginPath();q.moveTo(...W3(u,sideT,1.32));q.lineTo(...W3(u,sideT,2.62));q.stroke();}}   // its window frames
   else{const [hx,hy]=W3(-.02,sideT,1.08);q.fillStyle='rgba(12,12,18,.85)';q.beginPath();q.arc(hx,hy,k*.13,0,TAU);q.fill();}   // the driver, a shape against the city
   q.strokeStyle=`rgba(${c.glow},.9)`;q.lineWidth=Math.max(1,k*.05);q.beginPath();q.moveTo(...W3(.47,sideT,.44));q.lineTo(...W3(-.48,sideT,.44));q.stroke();   // a line of light along its side
+  if(CARS2&&CARS2.over)CARS2.over(q,{W3,sideT,pr,c,k,P});   // (review: what a page lays over the side, setCars({over}))
   if(c.kind==='taxi'){const sp=[[-.08,1.39],[-.08,1.6],[.08,1.6],[.08,1.39]];poly(q,'rgba(255,186,70,.95)',sp.map(([u,a])=>W3(u,sideT*.3,a)));glow(q,...W3(0,0,1.5),k*.6,'255,186,70',.4);}}   // a taxi's lit roof sign
 function drawCar(q,V,c,T){const {X,Y,ppm,W,H}=V,o=carPose(c),k=ppm(o.d),K0=KINDS[c.kind],sx=X(o.x,o.d),sy=Y(0,o.d);if(sx<-k*14||sx>W+k*14||sy<-k*4||sy>H+k*8)return;
   const fa=fogA(o.d),L=K0.L,w=K0.w,px=-o.hd,pd=o.hx,at=(s,t)=>[o.x+o.hx*L/2*s+px*w/2*t,o.d+o.hd*L/2*s+pd*w/2*t];
@@ -8273,6 +8278,7 @@ function drawCar(q,V,c,T){const {X,Y,ppm,W,H}=V,o=carPose(c),k=ppm(o.d),K0=KINDS
     const p0=[X(at(1,.8)[0],at(1,.8)[1]),Y(0,at(1,.8)[1])],p1=[X(at(1,-.8)[0],at(1,-.8)[1]),Y(0,at(1,-.8)[1])],p2=[X(tx+px*2.4,td+pd*2.4),Y(0,td+pd*2.4)],p3=[X(tx-px*2.4,td-pd*2.4),Y(0,td-pd*2.4)];
     const g=q.createLinearGradient(X(fx,fd),Y(0,fd),X(tx,td),Y(0,td));g.addColorStop(0,`rgba(255,245,225,${.2*(1-fa)})`);g.addColorStop(1,'rgba(255,245,225,0)');poly(q,g,[p0,p1,p3,p2]);}
   {const gp=(s,t)=>{const [gx,gd]=at(s,t);return[X(gx,gd),Y(0,gd)];};poly(q,`rgba(${c.glow},${.16*(1-fa)})`,[gp(1.05,1.25),gp(1.05,-1.25),gp(-1.05,-1.25),gp(-1.05,1.25)]);}   // its glow on the ground beneath it
+  if(CARS2&&CARS2.extra)CARS2.extra(q,V,o,c,T,{L,w,fa,at});
   for(const [s,col] of [[1,'255,245,225'],[-1,'255,50,60']])for(const t of [-.8,.8]){const [lx,ld]=at(s,t);smear(q,V,lx,ld,.7,col,1.5,.32,.45*(1-fa));}   // its lights, smeared down the wet road
   q.restore();
   solid(q,V,o,c);
@@ -8455,7 +8461,7 @@ function front(q,V){if(V.alt>60)return;tick(V);const {T}=V;
   if(XTRA)XTRA(items,q,V,T,'front');
   items.sort((a,b)=>b.d-a.d);for(const it of items)it.f();}
 function heroes(V){const {X,Y,alt}=V,r=[];if(alt<45){r.push({x0:X(-13,XW[1]),y0:Y(2.4,XW[1]),x1:X(13,ZN[0]),y1:Y(0,ZN[0]),w:1});}if(alt<14)r.push({x0:0,y0:Y(1.6,AV.d1),x1:V.W,y1:Y(0,AV.d0),w:.8});return r;}
-return{back,front,podium,heroes,BASE,setExtra(f){XTRA=f||null;},setPaint(o){PAINT=o||{};},setBlock(f){BLK=f||null;},kit:{drawCar,glow,smear,box,poly,fogA,KINDS,PLAZA,AV,FACE,WALL},setPed(f){PED=f||null;},setMove(f){PMOVE=f||null;},addPed(p,near){(near?QUEUE:MILL).push(p);},removePed(p){for(const L of [QUEUE,MILL]){const i=L.indexOf(p);if(i>=0)L.splice(i,1);}}};
+return{back,front,podium,heroes,BASE,setExtra(f){XTRA=f||null;},setPaint(o){PAINT=o||{};},setCars(o){CARS2=o||null;},setBlock(f){BLK=f||null;},kit:{drawCar,glow,smear,box,poly,fogA,KINDS,PLAZA,AV,FACE,WALL},setPed(f){PED=f||null;},setMove(f){PMOVE=f||null;},addPed(p,near){(near?QUEUE:MILL).push(p);},removePed(p){for(const L of [QUEUE,MILL]){const i=L.indexOf(p);if(i>=0)L.splice(i,1);}}};
 })();
 
 /* ===== scenes/penthouse/room1/ascent.js ===== */
@@ -10330,16 +10336,18 @@ const flat=(V,d)=>cl(Math.abs(V.Y(0,d+.5)-V.Y(0,d-.5))/V.ppm(d),.06,1);
 function pool(q,V,x,d,r,col,a){if(a<=.01)return;const k=V.ppm(d),sx=V.X(x,d),sy=V.Y(0,d);q.save();q.translate(sx,sy);q.scale(1,flat(V,d));glow(q,0,0,k*r,col,a);q.restore();}
 const bars=(c,T)=>{const w=S(TAU*1.5*T+c.ph);return[Math.pow(Math.max(0,w),.7),Math.pow(Math.max(0,-w),.7)];};   // red, blue
 
+let LOOK=null;   // (review: a page can give the police cars its own livery and lights, setLook(fn) -> {L, R}; without it, as here)
 function police(q,V,c,T,i){drawCar(q,V,c,T);const k=V.ppm(c.pose.d),[r,b]=bars(c,T);
+  let L,R;if(LOOK){const lk=LOOK(q,V,c,T,{k,r,b,onCar,glow,poly});L=lk.L;R=lk.R;q.save();q.globalCompositeOperation='lighter';}else{
   // the livery: a pale band and POLICE along the side that faces you, a reflective chevron at the back
   {const a0=onCar(c,.42,1,.62,V),a1=onCar(c,-.46,1,.62,V),b0=onCar(c,.42,1,.5,V),b1=onCar(c,-.46,1,.5,V);poly(q,'rgba(205,220,240,.55)',[[a0.sx,a0.sy],[a1.sx,a1.sy],[b1.sx,b1.sy],[b0.sx,b0.sy]]);
     const m=onCar(c,-.02,1,.82,V);q.save();q.translate(m.sx,m.sy);q.scale(Math.abs(C(Math.atan2(c.pose.hd,c.pose.hx)))*.8+.2,1);
     q.font=`700 ${Math.max(5,k*.24)}px "Unbounded","Arial Black",sans-serif`;q.textAlign='center';q.textBaseline='middle';q.fillStyle='rgba(225,236,255,.85)';q.fillText('POLICE',0,0);q.restore();}
   // the light bar on the roof, and its light on the rain
-  const L=onCar(c,-.05,-.35,1.5,V),R=onCar(c,-.05,.35,1.5,V);q.fillStyle='#07080c';q.fillRect(Math.min(L.sx,R.sx)-k*.12,L.sy-k*.1,Math.abs(R.sx-L.sx)+k*.24,k*.12);
+  L=onCar(c,-.05,-.35,1.5,V);R=onCar(c,-.05,.35,1.5,V);q.fillStyle='#07080c';q.fillRect(Math.min(L.sx,R.sx)-k*.12,L.sy-k*.1,Math.abs(R.sx-L.sx)+k*.24,k*.12);
   q.save();q.globalCompositeOperation='lighter';
   glow(q,L.sx,L.sy,k*(.8+3*r),'255,40,60',r);glow(q,R.sx,R.sy,k*(.8+3*b),'60,110,255',b);glow(q,L.sx,L.sy,k*.35,'255,230,230',.9*r);glow(q,R.sx,R.sy,k*.35,'230,236,255',.9*b);
-  for(const [p0,a,col] of [[L,r,'255,60,80'],[R,b,'90,140,255']]){if(a<.05)continue;const g=q.createLinearGradient(p0.sx-k*7,0,p0.sx+k*7,0);g.addColorStop(0,`rgba(${col},0)`);g.addColorStop(.5,`rgba(${col},${.7*a})`);g.addColorStop(1,`rgba(${col},0)`);q.fillStyle=g;q.fillRect(p0.sx-k*7,p0.sy-Math.max(.6,k*.025),k*14,Math.max(1.2,k*.05));}   // a flare off each lamp
+  for(const [p0,a,col] of [[L,r,'255,60,80'],[R,b,'90,140,255']]){if(a<.05)continue;const g=q.createLinearGradient(p0.sx-k*7,0,p0.sx+k*7,0);g.addColorStop(0,`rgba(${col},0)`);g.addColorStop(.5,`rgba(${col},${.7*a})`);g.addColorStop(1,`rgba(${col},0)`);q.fillStyle=g;q.fillRect(p0.sx-k*7,p0.sy-Math.max(.6,k*.025),k*14,Math.max(1.2,k*.05));}}   // a flare off each lamp
   glow(q,(L.sx+R.sx)/2,L.sy,k*13,r>b?'255,40,60':'60,110,255',.24*Math.max(r,b));   // the air around it, full of rain
   pool(q,V,c.pose.x,c.pose.d,7.5,'255,40,60',.34*r);pool(q,V,c.pose.x,c.pose.d,7.5,'60,110,255',.38*b);   // on the wet road
   smear(q,V,c.pose.x-.3,c.pose.d,.6,'255,40,60',4,.7,.75*r);smear(q,V,c.pose.x+.3,c.pose.d,.6,'60,110,255',4,.7,.75*b);
@@ -10404,7 +10412,7 @@ function wash(q,V,T){const [r,b]=bars(CARS[0],T),[r2,b2]=bars(CARS[1],T),R2=Math
     pool(q,V,-3,72,12,col,.22*a);}   // and across the road
   q.restore();}
 
-window.FPPolice={__scene:scene,get on(){return on;},set(v){on=!!v;t0=null;},
+window.FPPolice={__scene:scene,setLook(f){LOOK=f||null;},get on(){return on;},set(v){on=!!v;t0=null;},
   divert(x,d,p){if(x>ZONE.x1+.3||x<ZONE.x0+.2||d<ZONE.d0-.2||d>ZONE.d1+.2)return null;const e=Math.min(d-ZONE.d0,ZONE.d1-d);return[x,d,1-ease(-.2,.7,e)];},   // (no one walks through the cordon)
   where(x,d,a=0){return LV?[Math.round(LV.X(x,d)),Math.round(LV.Y(a,d))]:null;},   // (review: where a point of the scene is on screen)
   state(){return{on,t:t0===null?null:+(lastT-t0).toFixed(1)};}};
@@ -10653,6 +10661,314 @@ const heroTh=(alt,T)=>{if(alt<TURN_AT-8)t0=null;if(t0===null&&alt>=TURN_AT)t0=T;
 let on=!/#signs-before/.test(location.hash);
 function set(v){on=!!v;LF.review(on?{folFixed:true,noBeHappy:true,heroTh}:{});}
 set(on);window.FPSigns={get on(){return on;},set};
+})();
+
+/* ===== scenes/penthouse/room1/ascent-street-cars.js ===== */
+/* Built into the game 20 Nov 2026 (the owner: "ok i approve all"). First reviewed as a mockup (20 Nov 2026, the owner: "Go ahead with your suggestions", for the street's traffic after the sky cars' redesign).
+   Through FPStreet.setCars (scenes/penthouse/room1/ascent-street.js).
+   One fleet: the street's cars take the sky cars' retro-futuristic shape, seen close.
+   - cars and taxis: the low faceted wedge, a peak over the cabin, a long rear facet with a small rear glass, a raked
+     windscreen into a short hood, a chamfered nose (the taxi's roof sign and the police cars' light bar sit on the peak)
+   - vans: still boxy, with a chamfered roof edge at the back and a raked windscreen; buses: their corners chamfered
+   - how they stay up (the owner: "an accurate representation of how this would work"): the cars ride on lift pods a hand's
+     width over the wet road, and the pods blow fine spray off it: soft puffs of lit mist curling out from under each pod
+     and drifting back as the car moves, tinted by its underglow
+   - the flying cars' finish (the owner, the same evening: the street cars "should be more aligned to what we have done for
+     the flying cars"): facets that read as facets (the front planes catch the city's glow, the rear ones a shade darker),
+     the side lighter above the waist and darker below it, the roofline rim-lit by the city; their line of light along the
+     side in their own colour, and their white and red light strips, as before
+   - one difference kept on purpose, by what they do: street cars ride low on ground effect, so short skirts along their
+     sides hide small hover pads, and you see them work through the spray; flying cars sit higher on open lift pods with
+     their plumes (skyline-cars.js)
+   Their lights, their reflections down the wet road, their headlights on the road and their brake lights are unchanged.
+   FPStreetCars.set(false) shows them as they are (#…-now in the address starts that way). */
+(function(){
+'use strict';
+const ST=window.FPStreet;if(!ST||!ST.setCars)return;
+// side profiles: [u along the length, -0.5 tail to 0.5 nose; a, height in metres], each strip round it drawn across the car;
+// win: the strips that are glass; glass: the side window
+const PROF={
+  car:{p:[[-.5,.3],[-.5,.72],[-.24,1.2],[-.06,1.38],[.18,1.08],[.5,.66],[.52,.46],[.47,.3]],win:[2,3],glass:[[-.3,.86],[-.07,1.27],[.15,1.0],[.14,.86]]},
+  van:{p:[[-.5,.3],[-.5,1.7],[-.41,1.95],[.18,1.98],[.46,1.22],[.52,.9],[.5,.3]],win:[3],glass:[[-.38,1.3],[-.38,1.76],[.16,1.79],[.34,1.3]]},
+  bus:{p:[[-.5,.3],[-.5,2.82],[-.45,3.06],[.45,3.08],[.5,2.84],[.5,.3]],win:[4],glass:[[-.46,1.32],[-.46,2.62],[.47,2.62],[.47,1.32]]}};
+PROF.taxi=PROF.car;
+// the facets' shades, strip by strip round each profile (null: the game's own)
+const SHADE={car:{0:'#12151e',1:'#262c3c',4:'#343c53',5:'#1c2130',6:'#12151e'},van:{0:'#12151e',1:'#232838',2:'#2a3245',4:'#343c53',5:'#1a1e2a'},bus:{2:'#262c3c',3:'#262c3c'}};
+SHADE.taxi=SHADE.car;
+function shade(kind,i,up,glass){if(glass)return null;const t=SHADE[kind];return t&&t[i]||null;}
+// the side: lighter above the waist (it catches the city), darker below; then the skirt that hides the hover pads
+function side(q,o){const {W3,sideT,c,k,P}=o,pts=P.map(([u,a])=>W3(u,sideT,a)),top=W3(0,sideT,c.kind==='bus'?3:c.kind==='van'?1.9:1.3),bot=W3(0,sideT,.3),waist=c.kind==='bus'?.25:c.kind==='van'?.38:.6;
+  const g=q.createLinearGradient(top[0],top[1],bot[0],bot[1]);g.addColorStop(0,'#2b3144');g.addColorStop(waist,'#1c2030');g.addColorStop(Math.min(1,waist+.05),'#12151e');g.addColorStop(1,'#0b0d13');
+  q.fillStyle=g;q.beginPath();pts.forEach((p,i)=>i?q.lineTo(p[0],p[1]):q.moveTo(p[0],p[1]));q.closePath();q.fill();
+  const sk=[[-.47,.3],[-.47,.4],[.45,.4],[.45,.3]].map(([u,a])=>W3(u,sideT,a));q.fillStyle='#07080c';q.beginPath();sk.forEach((p,i)=>i?q.lineTo(p[0],p[1]):q.moveTo(p[0],p[1]));q.closePath();q.fill();   // the skirt
+  q.strokeStyle='rgba(150,170,210,.22)';q.lineWidth=Math.max(.6,k*.02);q.beginPath();q.moveTo(sk[1][0],sk[1][1]);q.lineTo(sk[2][0],sk[2][1]);q.stroke();}
+// over the side: the roofline, rim-lit by the city
+function over(q,o){const {W3,sideT,c,k,P}=o,n=P.length;let top=[];
+  for(let i=1;i<n-1;i++){const p=P[i];if(p[1]>.62||c.kind==='bus')top.push(p);}if(c.kind==='bus')top=P.filter(p=>p[1]>2.5);
+  if(top.length<2)return;q.save();q.globalCompositeOperation='lighter';q.strokeStyle='rgba(190,212,250,.42)';q.lineWidth=Math.max(.7,k*.03);q.lineJoin='round';q.beginPath();
+  top.forEach(([u,a],i)=>{const p=W3(u,sideT,a);i?q.lineTo(p[0],p[1]):q.moveTo(p[0],p[1]);});q.stroke();q.restore();}
+// the spray: puffs of lit mist from under each pod, curling out to the sides and drifting back as the car moves
+const h=(a,b)=>{const v=Math.sin(a*127.1+b*311.7)*43758.5453;return v-Math.floor(v);};
+function extra(q,V,o,c,T,m){const {X,Y,ppm}=V,k=ppm(o.d),fa=m.fa;if(k<1.2)return;
+  const flat=Math.max(.12,Math.min(.6,Math.abs(Y(0,o.d+1)-Y(0,o.d))/Math.max(1,k)));   // (the road seen at a slant: puffs are flattened)
+  const mov=Math.min(1,Math.abs(c.v||0)/6),pods=c.kind==='bus'?[-.7,-.25,.25,.7]:[-.55,.55],seed=(c.ph||0)*7.3;
+  q.save();
+  pods.forEach((s,pi)=>{for(let i=0;i<4;i++){const f=((T*(.9+.4*h(seed,pi*4+i))+i/4+h(seed,pi))%1),side=(i%2?1:-1),out=.35+1.1*f,back=-mov*f*2.2;
+    const [x,d]=m.at(s+back/(m.L/2),side*out),sx=X(x,d),sy=Y(.05+.25*f,d),r=k*(.45+1.15*f),a=(1-f)*(1-fa)*(.2+.1*mov);
+    if(a<.004)continue;const g=q.createRadialGradient(sx,sy,0,sx,sy,r);const tint=i<2?c.glow:'205,216,236';g.addColorStop(0,`rgba(${tint},${a.toFixed(3)})`);g.addColorStop(1,`rgba(${tint},0)`);
+    q.fillStyle=g;q.save();q.translate(sx,sy);q.scale(1,flat);q.translate(-sx,-sy);q.fillRect(sx-r,sy-r,r*2,r*2);q.restore();}});
+  q.restore();}
+let on=!/#street-cars-now/.test(location.hash);
+function set(v){on=!!v;ST.setCars(on?{prof:PROF,extra,shade,side,over}:null);}
+set(on);window.FPStreetCars={get on(){return on;},set};
+})();
+
+/* ===== scenes/penthouse/room1/ascent-police-look.js ===== */
+/* Built into the game 20 Nov 2026 (the owner: "ok i approve all"). First reviewed as a mockup (20 Nov 2026, the owner: "i don't want the police cars looking like cabs with the checker pattern. come up with a
+   minimalist design that befits a future police force."). Through
+   FPPolice.setLook (scenes/penthouse/room1/ascent-police.js). The emergency craft over
+   the skyline wears the same look (scenes/penthouse/room1/skyline-emergency.js).
+   The force's look, one for its cars and its craft, our own and fictional:
+   - matte graphite, nothing printed in blocks
+   - one light seam along the waist in a cool ice blue: its signature, seen from far off
+   - its strobes built in, not boxed: two slim red and blue strips flush along the roof's peak (a car) or its top edges (a
+     craft), dark glass when they're off, alternating smoothly (as before, never a hard flash)
+   - a small emblem on the rear quarter (a hexagon round a single chevron) and POLICE in small, widely spaced letters low
+     on the side, below the seam
+   Their light on the rain, on the street and in the air is the game's, unchanged.
+   FPPoliceLook.set(false) shows them as they are (#…-now in the address starts that way). */
+(function(){
+'use strict';
+const P=window.FPPolice;if(!P||!P.setLook)return;
+const ICE='150,220,255';
+function look(q,V,c,T,o){const {k,r,b,onCar,glow,poly}=o,at=(u,t,a)=>onCar(c,u,t,a,V);
+  // the seam: one line of ice blue along the waist, glowing softly
+  {const a0=at(.47,1,.66),a1=at(-.48,1,.68);q.save();q.globalCompositeOperation='lighter';q.strokeStyle=`rgba(${ICE},.9)`;q.lineWidth=Math.max(1,k*.035);q.lineCap='round';
+   q.shadowColor=`rgb(${ICE})`;q.shadowBlur=Math.max(2,k*.12);q.beginPath();q.moveTo(a0.sx,a0.sy);q.lineTo(a1.sx,a1.sy);q.stroke();q.restore();}
+  // POLICE, small and widely spaced, low on the side under the seam
+  {const m=at(.1,1,.5),ang=Math.atan2(c.pose.hd,c.pose.hx);q.save();q.translate(m.sx,m.sy);q.scale(Math.abs(Math.cos(ang))*.8+.2,1);
+   q.font=`600 ${Math.max(4,k*.13)}px "Azeret Mono","Unbounded",monospace`;if('letterSpacing' in q)q.letterSpacing=`${Math.max(1,k*.06)}px`;q.textAlign='center';q.textBaseline='middle';q.fillStyle='rgba(205,222,245,.75)';q.fillText('POLICE',0,0);q.restore();}
+  // the emblem on the rear quarter: a hexagon round a chevron
+  {const e=at(-.34,1,.86),s=Math.max(2,k*.13);q.save();q.translate(e.sx,e.sy);q.strokeStyle=`rgba(${ICE},.75)`;q.lineWidth=Math.max(.7,k*.022);q.beginPath();
+   for(let i=0;i<6;i++){const an=Math.PI/6+i*Math.PI/3;q.lineTo(Math.cos(an)*s,Math.sin(an)*s);}q.closePath();q.stroke();
+   q.beginPath();q.moveTo(-s*.45,-s*.1);q.lineTo(0,s*.35);q.lineTo(s*.45,-s*.1);q.stroke();q.restore();}
+  // the strobes, flush along the roof's peak: dark glass when off
+  const L0=at(-.06,-.75,1.39),L1=at(-.06,-.08,1.39),R0=at(-.06,.08,1.39),R1=at(-.06,.75,1.39),w=Math.max(1.2,k*.05);
+  const strip=(p0,p1,col,a)=>{q.strokeStyle=a>.05?`rgba(${col},${(.35+.65*a).toFixed(3)})`:'rgba(30,34,44,.9)';q.lineWidth=w;q.lineCap='round';q.beginPath();q.moveTo(p0.sx,p0.sy);q.lineTo(p1.sx,p1.sy);q.stroke();};
+  strip(L0,L1,'255,70,90',r);strip(R0,R1,'90,140,255',b);
+  const L={sx:(L0.sx+L1.sx)/2,sy:(L0.sy+L1.sy)/2},R={sx:(R0.sx+R1.sx)/2,sy:(R0.sy+R1.sy)/2};
+  q.save();q.globalCompositeOperation='lighter';glow(q,L.sx,L.sy,k*(.7+2.6*r),'255,40,60',r);glow(q,R.sx,R.sy,k*(.7+2.6*b),'60,110,255',b);glow(q,L.sx,L.sy,k*.3,'255,230,230',.8*r);glow(q,R.sx,R.sy,k*.3,'230,236,255',.8*b);q.restore();
+  return{L,R};}
+let on=!/#police-now/.test(location.hash);
+function set(v){on=!!v;P.setLook(on?look:null);}
+set(on);window.FPPoliceLook={get on(){return on;},set,_look:look};   // (_look: for a contact sheet)
+})();
+
+/* ===== scenes/penthouse/room1/skyline-cars.js ===== */
+/* Built into the game 20 Nov 2026 (the owner: "ok i approve all"). First reviewed as a mockup (20 Nov 2026, the owner, with a picture of one: "all of the cars in the background look like this. we need to make
+   that better a quality design. It's far too noticeable when playing on larger screens."; then: "a bit more futuristic in a
+   retro way. think cybertruck but don't overdo the rigid lines"). Through FPSkyline.set({laneCar}) (scenes/penthouse/room1/skyline.js).
+   The cars in the air lanes (seen through the lobby's glass wall, and far off on the ride) were each a pale see-through disc
+   with a white dot and a red dot; the car's own shape only faded in once it was over 16 pixels long, so on a big screen the
+   disc read as a bubble. Redrawn as one fleet with the street's (the same kinds and underglow colours), in the skyline's
+   way, light on a dark shape:
+   - retro-futuristic bodies of our own: a low faceted wedge with a raked nose and a softened ridge at the crown, chamfered
+     facets, the top ones catching the city's light; no wheels, two lift pods under it glowing in the street's colours
+   - three kinds, as on the street: mostly cars, some taxis (an amber light on the roof), the odd van (taller, longer, a
+     little slower to read as heavier)
+   - a thin light bar across the nose with a soft glow and, once the car is big enough to read, a faint beam forward through
+     the rain; a red bar across the tail with a soft glow (a tail light: it shows which way the car goes)
+   - what holds it up is what trails it (the owner: "an accurate representation of how this would work"): each lift pod pushes
+     down and tilts back to drive the car forward, so each throws a short plume of its colour down and back, swept further
+     on faster lanes, fading into lit mist; no red streak (that is a long-exposure photograph's effect, not what an eye sees)
+   - no disc. Smaller than about 5 pixels a car is only its lights, as before
+   Same lanes, speeds and sizes. FPSkyCars.set(false) shows the cars as they are (#…-now in the address starts that way). */
+(function(){
+'use strict';
+const K=window.FPSkyline;if(!K||!K.set)return;
+const cl01=v=>Math.max(0,Math.min(1,v));
+const GLOW=['90,220,255','255,90,200','255,190,90','160,140,255','120,255,170'];   // (the street's underglow colours: ascent-street.js)
+// the bodies, nose toward +x, in the old car's 16-unit frame (x -8..8): flat facets meeting at a peak, their edges lightly
+// rounded (a wedge, not a slab); w: the waist line where the upper facets meet the lower body
+const KIND={
+  car:{peak:[-.8,-2.6],tailTop:[-7.9,-.95],noseTop:[7.55,-.55],nose:[7.95,.35],front:[6.7,1.5],rear:[-7.2,1.5],tailBot:[-7.95,.6],w:.15,
+       glass:[[-.55,-2.32],[3.7,-1.4],[3.3,-.95],[-.75,-.95]],glassR:[[-1.2,-2.28],[-4.2,-1.6],[-4.1,-1.15],[-1.3,-1.1]],head:[[5.3,-.06],[7.9,-.06]],tail:[[-7.9,-.18],[-6.3,-.18]],pods:[-4.3,4]},
+  van:{peak:[2.1,-2.95],roofBack:[-8.1,-2.65],tailTop:[-8.6,-2.1],noseTop:[7.7,-.6],nose:[8.05,.35],front:[6.9,1.6],rear:[-7.9,1.6],tailBot:[-8.6,.7],w:.2,
+       glass:[[2.3,-2.62],[5.2,-1.45],[4.8,-1.0],[2,-1.05]],glassR:[[1.4,-2.6],[-1.8,-2.55],[-1.8,-1.2],[1.2,-1.15]],head:[[5.6,-.06],[8,-.06]],tail:[[-8.55,-.3],[-7,-.3]],pods:[-5.2,4.2]}};
+function rounded(c,pts,r){const n=pts.length,mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];c.beginPath();const m0=mid(pts[0],pts[1]);c.moveTo(m0[0],m0[1]);   // a closed outline, each corner rounded by r
+  for(let i=1;i<=n;i++){const p=pts[i%n],m=mid(p,pts[(i+1)%n]);c.arcTo(p[0],p[1],m[0],m[1],r);}c.closePath();}
+function body(c,x,y,cl,d,kd,glow,lit){const B=KIND[kd==='van'?'van':'car'];c.save();c.translate(x,y);c.scale(cl*d,cl);
+  const W=B.w,top=B.roofBack?[B.tailTop,B.roofBack,B.peak,B.noseTop]:[B.tailTop,B.peak,B.noseTop],out=[...top,B.nose,B.front,B.rear,B.tailBot];
+  const fill=(pts,stops,y0,y1)=>{const g=c.createLinearGradient(0,y0,0,y1);stops.forEach(([o,col])=>g.addColorStop(o,col));c.fillStyle=g;rounded(c,pts,.28);c.fill();};
+  fill(out,[[0,'#0d1018'],[1,'#06070b']],-3,2);   // the whole body, dark
+  c.save();rounded(c,out,.28);c.clip();
+  const pk=B.peak,wN=[B.noseTop[0]+.2,W],wP=[pk[0],W],wT=[B.tailTop[0],W];
+  fill([pk,B.noseTop,wN,wP],[[0,'#4a5470'],[1,'#1b2131']],pk[1],W);   // the front facet: it faces the city's glow
+  fill([...(B.roofBack?[B.tailTop,B.roofBack]:[B.tailTop]),pk,wP,wT],[[0,'#2c3346'],[1,'#121621']],pk[1],W);   // the rear facet, a shade darker
+  c.fillStyle='rgba(0,0,0,.28)';c.beginPath();c.moveTo(B.rear[0],B.rear[1]);c.lineTo(B.front[0],B.front[1]);c.lineTo(B.front[0]-.6,W+.9);c.lineTo(B.rear[0]+.4,W+.9);c.closePath();c.fill();   // the lower chamfer, in shadow
+  const gl=(q,a)=>{const g=c.createLinearGradient(0,q[0][1],0,q[2][1]);g.addColorStop(0,`rgba(120,160,220,${a})`);g.addColorStop(1,'rgba(14,22,40,.92)');c.fillStyle=g;c.beginPath();q.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.closePath();c.fill();};
+  gl(B.glass,.8);gl(B.glassR,.45);   // its glass
+  c.strokeStyle=`rgba(${glow},.55)`;c.lineWidth=.1;c.beginPath();c.moveTo(wT[0]+.3,W);c.lineTo(wN[0]-.3,W);c.stroke();   // a thin accent line along its waist, in its colour
+  c.restore();
+  c.strokeStyle=`rgba(${lit},.55)`;c.lineWidth=.2;c.lineJoin='round';c.beginPath();top.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.stroke();   // its top edges, lit by the city
+  c.fillStyle='#05060a';for(const px of B.pods){c.beginPath();c.ellipse(px,B.front[1]+.12,1.25,.4,0,0,Math.PI*2);c.fill();}   // its lift pods
+  c.save();c.globalCompositeOperation='lighter';for(const px of B.pods){const yy=B.front[1]+.4,g=c.createRadialGradient(px,yy,0,px,yy,2.2);g.addColorStop(0,`rgba(${glow},.55)`);g.addColorStop(1,`rgba(${glow},0)`);c.fillStyle=g;c.fillRect(px-2.2,yy-.5,4.4,2.6);}c.restore();
+  c.restore();}
+const h01=v=>{const s=Math.sin(v*127.1+311.7)*43758.5453;return s-Math.floor(s);};
+function kindOf(k){if(k.__kd)return k.__kd;const r=h01(k.bob*13.7+k.v*.37);k.__kd=r<.12?'van':r<.32?'taxi':'car';k.__glow=GLOW[Math.floor(h01(k.bob*7.3+1.1)*GLOW.length)];return k.__kd;}
+function laneCar(c,o){const {vis,ys,dir:d,s2,cl,px,light}=o,bodyA=o.hd?cl01((px-5)/9):0,beamA=cl01((px-10)/14);
+  vis.forEach((k,i)=>{const kd=kindOf(k),B=KIND[kd==='van'?'van':'car'],x=k.x,y=ys[i]+.2*cl,glow=k.__glow,W=(a)=>[x+d*a[0]*cl,y+a[1]*cl];
+    const [h0,h1]=B.head.map(W),[t0,t1]=B.tail.map(W),nx=(h0[0]+h1[0])/2,ny=(h0[1]+h1[1])/2,tx=(t0[0]+t1[0])/2,ty=(t0[1]+t1[1])/2;
+    c.save();c.globalCompositeOperation='lighter';
+    light(c,x,y+2.6*cl,7*cl,`rgba(${glow},A)`,.09);   // its lift, a faint glow under it in its colour
+    {const tilt=Math.max(.42,Math.min(.78,.3+(k.v||40)/170)),ux=-d*Math.sin(tilt),uy=Math.cos(tilt),len=(3.4+2.2*tilt)*cl,a0=.75*(.45+.55*bodyA);   // its lift: each pod's plume, pushed down and swept back as it flies (faster lanes sweep further)
+     for(const pod of B.pods){const [px0,py0]=W([pod,B.front[1]+.42]),ex=px0+ux*len,ey=py0+uy*len,nxp=-uy,nyp=ux,w0=.55*cl,w1=1.6*cl;
+       for(const [f,al] of [[1,.28],[.62,.34],[.32,.42]]){const A=a0*al,g=c.createLinearGradient(px0,py0,ex,ey);g.addColorStop(0,`rgba(${glow},${A.toFixed(3)})`);g.addColorStop(.5,`rgba(${glow},${(A*.4).toFixed(3)})`);g.addColorStop(1,`rgba(${glow},0)`);   // (three layers, widest faintest: a soft, diffuse plume, not a beam)
+         const v0=w0*f,v1=w1*f;c.fillStyle=g;c.beginPath();c.moveTo(px0+nxp*v0,py0+nyp*v0);c.quadraticCurveTo(px0+ux*len*.5+nxp*v1*1.05,py0+uy*len*.5+nyp*v1*1.05,ex+nxp*v1,ey+nyp*v1);c.lineTo(ex-nxp*v1,ey-nyp*v1);c.quadraticCurveTo(px0+ux*len*.5-nxp*v1*1.05,py0+uy*len*.5-nyp*v1*1.05,px0-nxp*v0,py0-nyp*v0);c.closePath();c.fill();}
+       light(c,ex,ey,2.2*cl,`rgba(${glow},A)`,.07);}}   // (and where it thins, a breath of lit mist)
+    c.restore();
+    if(bodyA>0){c.save();c.globalAlpha*=bodyA;body(c,x,y,cl,d,kd,glow,'190,212,250');c.restore();}
+    c.save();c.globalCompositeOperation='lighter';
+    if(beamA>0){const L=22*cl,w=3.2*cl,g=c.createLinearGradient(nx,ny,nx+d*L,ny);g.addColorStop(0,`rgba(235,244,255,${(.15*beamA).toFixed(3)})`);g.addColorStop(1,'rgba(235,244,255,0)');   // the headlights' beam
+      c.fillStyle=g;c.beginPath();c.moveTo(h0[0],h0[1]);c.lineTo(nx+d*L,ny-w*.6);c.lineTo(nx+d*L,ny+w);c.lineTo(h1[0],h1[1]);c.closePath();c.fill();}
+    light(c,nx,ny,3*cl+1.2,'rgba(235,244,255,A)',.5);light(c,tx,ty,2.4*cl+1,'rgba(255,60,70,A)',.45);   // the lights' glow
+    if(kd==='taxi'){const [rx,ry]=W([B.peak[0],B.peak[1]-.25]);light(c,rx,ry,2.2*cl+.8,'rgba(255,190,90,A)',.55);}
+    c.restore();
+    const bar=(a,b,col,w)=>{c.strokeStyle=col;c.lineWidth=w;c.lineCap='round';c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0],b[1]);c.stroke();};
+    const unit=Math.max(.01,px/(16*cl)),lw=Math.max(1.4/unit,.2*cl);   // (the light bars: at least about 1.4 screen pixels, and slim on a big car)
+    bar(h0,h1,'#f4f8ff',lw);bar(t0,t1,'#ff5a5a',lw);   // the light bars across the nose and the tail
+    if(kd==='taxi'&&bodyA>0){const a=W([B.peak[0]-.8,B.peak[1]-.12]),b=W([B.peak[0]+.8,B.peak[1]-.12]);bar(a,b,'rgba(255,200,110,.95)',Math.max(1.2/unit,.18*cl));}});}   // the taxi's roof light
+let on=!/#cars-now/.test(location.hash);
+function set(v){on=!!v;K.set({laneCar:on?laneCar:null});}
+set(on);window.FPSkyCars={get on(){return on;},set,_body:body,_kinds:['car','taxi','van']};
+})();
+
+/* ===== scenes/penthouse/room1/skyline-emergency.js ===== */
+/* Built into the game 20 Nov 2026 (the owner: "ok i approve all"). First reviewed as a mockup (20 Nov 2026, the owner: "yes please", to giving the skyline's emergency craft the fleet's treatment). Through FPSkyline.set({sirenBody}) (scenes/penthouse/room1/skyline.js).
+   The emergency craft (the city's fictional response service) was a rounded pod with a checked band, a canopy, a light-bar
+   housing and a searchlight, and nothing holding it up. Redrawn as the fleet's heavy member:
+   - a larger, heavier wedge of flat facets, its edges lightly rounded: a peak over the cabin, a long rear facet, a raked
+     canopy into a chamfered nose; the front facet catches the city's glow, the top edges lit by it
+   - the force's minimalist look (the owner, the same day: "i don't want the police cars looking like cabs with the checker
+     pattern"; shared with the street's police cars, scenes/penthouse/room1/ascent-police-look.js): matte graphite, one ice-blue light seam
+     along its waist, POLICE small and widely spaced under it, the emblem (a hexagon round a chevron) on the rear quarter,
+     and no light-bar box: its strobes are slim red and blue strips built flush into its top edges either side of the peak,
+     dark glass when off, alternating as before; the searchlight pod under its nose (its beam is the game's)
+   - four lift pods (it is heavier than a car), each throwing a soft pale plume: swept back while it races in, and pointing
+     straight down while it hovers over a scene, where the downwash pushes the rain and mist below it outward (what a
+     hovering craft really does)
+   FPSkyEmergency.set(false) shows it as it is (#…-now in the address starts that way). */
+(function(){
+'use strict';
+const K=window.FPSkyline;if(!K||!K.set)return;
+// in the craft's own frame (nose toward +x, x -24..22, y -8..6, as the game draws it; its light bar sits at y -10 to -7.6)
+const OUT=[[-24.5,-2.6],[-19,-7.1],[-1,-8.3],[18,-2.4],[22.6,.9],[19.2,5.6],[-20.5,6.1],[-24.8,2.8]],PEAK=2,PODS=[-17,-8.5,8.5,16.5],PLUME='190,228,255';
+function rounded(c,pts,r){const n=pts.length,mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];c.beginPath();const m0=mid(pts[0],pts[1]);c.moveTo(m0[0],m0[1]);
+  for(let i=1;i<=n;i++){const p=pts[i%n],m=mid(p,pts[(i+1)%n]);c.arcTo(p[0],p[1],m[0],m[1],r);}c.closePath();}
+function plumes(c,o){const {env,hover,t,light}=o,tilt=(1-hover)*.62,ux=-Math.sin(tilt),uy=Math.cos(tilt),len=11+5*hover;
+  c.save();c.globalCompositeOperation='lighter';
+  for(const px of PODS){const x0=px,y0=6.7,ex=x0+ux*len,ey=y0+uy*len,nx=-uy,ny=ux;
+    for(const [f,al] of [[1,.1],[.6,.13],[.3,.17]]){const w0=1.5*f,w1=(4.5+2.5*hover)*f,g=c.createLinearGradient(x0,y0,ex,ey);g.addColorStop(0,`rgba(${PLUME},${(al*env).toFixed(3)})`);g.addColorStop(.5,`rgba(${PLUME},${(al*.4*env).toFixed(3)})`);g.addColorStop(1,`rgba(${PLUME},0)`);
+      c.fillStyle=g;c.beginPath();c.moveTo(x0+nx*w0,y0+ny*w0);c.quadraticCurveTo(x0+ux*len*.5+nx*w1,y0+uy*len*.5+ny*w1,ex+nx*w1,ey+ny*w1);c.lineTo(ex-nx*w1,ey-ny*w1);c.quadraticCurveTo(x0+ux*len*.5-nx*w1,y0+uy*len*.5-ny*w1,x0-nx*w0,y0-ny*w0);c.closePath();c.fill();}}
+  if(hover>.05){for(let i=0;i<6;i++){const f=((t*.45+i/6)%1),side=i%2?1:-1,x=side*(6+f*26),y=6.7+len+2+f*3,r=6+f*10;light(c,x,y,r,`rgba(${PLUME},A)`,.09*(1-f)*hover*env);}}   // the downwash, pushing the mist out below it
+  c.restore();}
+function body(c,o){const {env}=o;c.globalAlpha*=env;
+  c.fillStyle='#090b12';rounded(c,OUT,.9);c.fill();
+  c.save();rounded(c,OUT,.9);c.clip();
+  const pk=OUT[PEAK],W=0;
+  {const g=c.createLinearGradient(0,pk[1],0,W);g.addColorStop(0,'#4c5674');g.addColorStop(1,'#1c2232');c.fillStyle=g;c.beginPath();c.moveTo(pk[0],pk[1]);c.lineTo(OUT[3][0],OUT[3][1]);c.lineTo(22,W);c.lineTo(pk[0],W);c.closePath();c.fill();}   // the front facet, toward the city's glow
+  {const g=c.createLinearGradient(0,pk[1],0,W);g.addColorStop(0,'#2e3548');g.addColorStop(1,'#131722');c.fillStyle=g;c.beginPath();c.moveTo(OUT[0][0],OUT[0][1]);c.lineTo(OUT[1][0],OUT[1][1]);c.lineTo(pk[0],pk[1]);c.lineTo(pk[0],W);c.lineTo(-25,W);c.closePath();c.fill();}   // the rear facet, a shade darker
+  {const g=c.createLinearGradient(0,-8,0,-3);g.addColorStop(0,'rgba(120,165,225,.85)');g.addColorStop(1,'rgba(12,22,42,.92)');c.fillStyle=g;c.beginPath();c.moveTo(-.4,-7.9);c.lineTo(11.5,-4.7);c.lineTo(10.4,-2.9);c.lineTo(-.6,-3.1);c.closePath();c.fill();
+   c.globalAlpha*=.6;c.beginPath();c.moveTo(-1.6,-7.8);c.lineTo(-12,-5.9);c.lineTo(-12,-3.3);c.lineTo(-1.8,-3.1);c.closePath();c.fill();c.globalAlpha/=.6;}   // its canopy, and the cabin's side glass
+  c.fillStyle='rgba(0,0,0,.3)';c.beginPath();c.moveTo(-20.5,6.1);c.lineTo(19.2,5.6);c.lineTo(17,3.4);c.lineTo(-19,3.6);c.closePath();c.fill();   // the lower chamfer, in shadow
+  c.restore();
+  c.strokeStyle='rgba(190,212,250,.55)';c.lineWidth=.3;c.lineJoin='round';c.beginPath();for(let i=0;i<=3;i++){const p=OUT[i];i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]);}c.stroke();   // its top edges, lit by the city
+  c.fillStyle='#05070b';for(const px of PODS){c.beginPath();c.ellipse(px,6.3,2.2,.75,0,0,Math.PI*2);c.fill();}   // its lift pods
+  {const g=c.createLinearGradient(0,5.5,0,8.5);g.addColorStop(0,'#2a3346');g.addColorStop(1,'#0a0d14');c.fillStyle=g;c.beginPath();c.ellipse(3,6.9,2.2,1.4,0,0,Math.PI*2);c.fill();}   // the searchlight pod
+  c.save();c.globalCompositeOperation='lighter';for(const px of PODS){const g=c.createRadialGradient(px,6.9,0,px,6.9,3.4);g.addColorStop(0,`rgba(${PLUME},.5)`);g.addColorStop(1,`rgba(${PLUME},0)`);c.fillStyle=g;c.fillRect(px-3.4,5.6,6.8,4.6);}c.restore();}
+const ICE='150,220,255',lerp=(a,b,f)=>[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f];
+function livery(c,o){const {env,light,on,ca,cb,col}=o;
+  c.save();c.globalCompositeOperation='lighter';c.strokeStyle=`rgba(${ICE},${(.9*env).toFixed(3)})`;c.lineWidth=.35;c.lineCap='round';c.shadowColor=`rgb(${ICE})`;c.shadowBlur=3;
+  c.beginPath();c.moveTo(-22,.9);c.lineTo(20.5,.9);c.stroke();c.restore();   // the seam, ice blue along the waist
+  c.save();c.globalAlpha*=env;c.font='600 1.5px "Azeret Mono",monospace';if('letterSpacing' in c)c.letterSpacing='.6px';c.textAlign='center';c.textBaseline='middle';c.fillStyle='rgba(205,222,245,.75)';c.fillText('POLICE',2,2.6);   // POLICE, small, under the seam
+  c.translate(-14.5,-3.4);c.strokeStyle=`rgba(${ICE},.75)`;c.lineWidth=.22;c.beginPath();for(let i=0;i<6;i++){const an=Math.PI/6+i*Math.PI/3;c.lineTo(Math.cos(an)*1.5,Math.sin(an)*1.5);}c.closePath();c.stroke();
+  c.beginPath();c.moveTo(-.68,-.15);c.lineTo(0,.52);c.lineTo(.68,-.15);c.stroke();c.restore();   // the emblem, on the rear quarter
+  // the strobes, flush along the top edges either side of the peak: dark glass when off
+  const lb=on?[1,.12]:[.12,1],pk=OUT[PEAK],r0=lerp(OUT[1],pk,.5),r1=lerp(OUT[1],pk,.95),f0=lerp(pk,OUT[3],.05),f1=lerp(pk,OUT[3],.42);
+  const strip=(p0,p1,cc,a)=>{c.strokeStyle=cc.replace('A',(a>.2?.35+.65*a:.0).toFixed(3));c.lineWidth=.75;c.lineCap='round';c.beginPath();c.moveTo(p0[0],p0[1]-.15);c.lineTo(p1[0],p1[1]-.15);c.stroke();};
+  c.strokeStyle='rgba(28,32,42,.95)';c.lineWidth=.75;c.lineCap='round';for(const [p0,p1] of [[r0,r1],[f0,f1]]){c.beginPath();c.moveTo(p0[0],p0[1]-.15);c.lineTo(p1[0],p1[1]-.15);c.stroke();}
+  strip(r0,r1,ca,lb[0]*env);strip(f0,f1,cb,lb[1]*env);
+  c.save();c.globalCompositeOperation='lighter';const rm=lerp(r0,r1,.5),fm=lerp(f0,f1,.5);light(c,rm[0],rm[1],6,ca,.6*lb[0]*env);light(c,fm[0],fm[1],6,cb,.6*lb[1]*env);light(c,-1,-11,16,col,.28*env);   // their light in the rain around it
+  light(c,22.4,.9,4,'rgba(255,250,235,A)',.6*env);c.restore();
+  c.fillStyle=`rgba(255,250,235,${env})`;c.beginPath();c.arc(22.4,.9,1.1,0,7);c.fill();}   // its headlight
+function sirenBody(c,o){plumes(c,o);c.save();body(c,o);c.restore();c.save();livery(c,o);c.restore();return true;}
+let on=!/#emergency-now/.test(location.hash);
+function set(v){on=!!v;K.set({sirenBody:on?sirenBody:null});}
+set(on);
+// (review: call one in to hover over a scene in front of you)
+function callOne(){const vx=K.viewX(),dir=Math.random()<.5?1:-1;K.event('siren',{dur:22,type:'wail',ph:Math.random()*3,path:{job:'respond',dir,ease:'out',keys:[[0,vx-dir*1000,1800,-10],[.45,vx,1650,80],[1,vx,1650,80]]}});}
+window.FPSkyEmergency={get on(){return on;},set,callOne,_draw:sirenBody};
+})();
+
+/* ===== scenes/penthouse/room1/skyline-spinners.js ===== */
+/* Built into the game 20 Nov 2026 (the owner: "ok i approve all"). First reviewed as a mockup (20 Nov 2026, the owner: "i want them brought as well", the spinners joining the fleet). Through FPSkyline.set({spinnerShape}) (scenes/penthouse/room1/skyline.js).
+   The spinners (the larger flying cars that pass close to the glass, and the one that glides by in the first look) were
+   rounded, with two glowing pads under them. Redrawn as the fleet's biggest car, seen close:
+   - the fleet's wedge (skyline-cars.js): flat facets meeting at a peak over the cabin, edges lightly rounded, a raked canopy
+     into a chamfered nose; the front facet catches the city's glow, the rear sits a shade darker; a thin cyan accent line
+     along the waist; a white light strip across the nose, a red one across the tail
+   - kept: its headlight beam with the rain in it, the city's light catching it (magenta along the roof, cyan along the
+     belly, so its shape reads against the towers), the ginkgo's blue on it as it passes the tree, its white roof beacon
+   - its two lift pods are open, as on every flying car, each throwing a soft cyan plume down and back (it is always moving),
+     pulsing with its drive as the pads did
+   FPSkySpinners.set(false) shows them as they are (#…-now in the address starts that way). */
+(function(){
+'use strict';
+const K=window.FPSkyline;if(!K||!K.set)return;
+// in the spinner's own frame (nose toward +x, x -110..72, y -27..16, as the game draws it)
+const OUT=[[-110,9],[-108,-7],[-92,-19],[-30,-27],[60,-8],[72,2],[60,15],[-100,16]],PEAK=3,PODS=[-70,-20],CY='120,220,255';
+function rounded(c,pts,r){const n=pts.length,mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];c.beginPath();const m0=mid(pts[0],pts[1]);c.moveTo(m0[0],m0[1]);
+  for(let i=1;i<=n;i++){const p=pts[i%n],m=mid(p,pts[(i+1)%n]);c.arcTo(p[0],p[1],m[0],m[1],r);}c.closePath();}
+function topEdge(c){for(let i=1;i<=4;i++){const p=OUT[i];i>1?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]);}}
+function spinner(c,o){const {x,y,s,dir,glow,pulse,beacon,rim,tint,light,dot,beamRain}=o;
+  c.save();c.translate(x,y);c.scale(s*dir,s);
+  // its headlights' beam, with the rain in it (the game's)
+  {const bg=c.createLinearGradient(40,0,420,0);bg.addColorStop(0,`rgba(255,245,225,${.32*glow})`);bg.addColorStop(1,'rgba(255,245,225,0)');
+   c.fillStyle=bg;c.beginPath();c.moveTo(66,-4);c.lineTo(420,-70);c.lineTo(420,60);c.lineTo(66,4);c.fill();
+   beamRain(c,66,0,420,-5,5,65,.55*glow,performance.now()/1000,1.4,'240,245,255',dir);}
+  // its lift: each open pod throws a soft plume down and back
+  c.save();c.globalCompositeOperation='lighter';const tilt=.6,ux=-Math.sin(tilt),uy=Math.cos(tilt),len=58;
+  for(const px of PODS){const x0=px,y0=17.5,ex=x0+ux*len,ey=y0+uy*len,nx=-uy,ny=ux,a0=(.5+.5*pulse)*glow;
+    for(const [f,al] of [[1,.1],[.6,.13],[.3,.17]]){const w0=8*f,w1=22*f,g=c.createLinearGradient(x0,y0,ex,ey);g.addColorStop(0,`rgba(${CY},${(al*a0).toFixed(3)})`);g.addColorStop(.5,`rgba(${CY},${(al*.4*a0).toFixed(3)})`);g.addColorStop(1,`rgba(${CY},0)`);
+      c.fillStyle=g;c.beginPath();c.moveTo(x0+nx*w0,y0+ny*w0);c.quadraticCurveTo(x0+ux*len*.5+nx*w1,y0+uy*len*.5+ny*w1,ex+nx*w1,ey+ny*w1);c.lineTo(ex-nx*w1,ey-ny*w1);c.quadraticCurveTo(x0+ux*len*.5-nx*w1,y0+uy*len*.5-ny*w1,x0-nx*w0,y0-ny*w0);c.closePath();c.fill();}
+    light(c,px,18,30,`rgba(${CY},A)`,(.25+.55*pulse)*glow);}
+  c.restore();
+  // the body: facets meeting at the peak
+  c.fillStyle='#090b12';rounded(c,OUT,4);c.fill();
+  c.save();rounded(c,OUT,4);c.clip();const pk=OUT[PEAK],W=-1;
+  {const g=c.createLinearGradient(0,pk[1],0,W);g.addColorStop(0,'#465070');g.addColorStop(1,'#1a2030');c.fillStyle=g;c.beginPath();c.moveTo(pk[0],pk[1]);c.lineTo(OUT[4][0],OUT[4][1]);c.lineTo(72,W);c.lineTo(pk[0],W);c.closePath();c.fill();}   // the front facet, toward the city's glow
+  {const g=c.createLinearGradient(0,pk[1],0,W);g.addColorStop(0,'#2c3346');g.addColorStop(1,'#121620');c.fillStyle=g;c.beginPath();c.moveTo(OUT[1][0],OUT[1][1]);c.lineTo(OUT[2][0],OUT[2][1]);c.lineTo(pk[0],pk[1]);c.lineTo(pk[0],W);c.lineTo(-112,W);c.closePath();c.fill();}   // the rear facet
+  {const g=c.createLinearGradient(0,-26,0,-8);g.addColorStop(0,'rgba(120,165,225,.8)');g.addColorStop(1,'rgba(12,22,42,.92)');c.fillStyle=g;c.beginPath();c.moveTo(-27,-25.5);c.lineTo(26,-16.5);c.lineTo(23,-9.5);c.lineTo(-28,-10);c.closePath();c.fill();   // its canopy
+   c.globalAlpha=.55;c.beginPath();c.moveTo(-34,-25);c.lineTo(-80,-18.5);c.lineTo(-80,-10.5);c.lineTo(-34,-10);c.closePath();c.fill();c.globalAlpha=1;}   // and the cabin's side glass
+  if(tint>0){c.fillStyle=`rgba(120,190,255,${.3*tint})`;c.beginPath();c.moveTo(-27,-25.5);c.lineTo(26,-16.5);c.lineTo(23,-9.5);c.lineTo(-28,-10);c.closePath();c.fill();}   // the ginkgo's blue in the canopy
+  c.fillStyle='rgba(0,0,0,.3)';c.beginPath();c.moveTo(-100,16);c.lineTo(60,15);c.lineTo(52,8);c.lineTo(-96,8);c.closePath();c.fill();   // the lower chamfer, in shadow
+  c.strokeStyle=`rgba(${CY},.55)`;c.lineWidth=Math.min(.9,1.1/s);c.beginPath();c.moveTo(-104,-1);c.lineTo(68,-1);c.stroke();   // a thin cyan accent along the waist
+  c.restore();
+  // the city's light on it, so its shape reads against the towers; the ginkgo's blue along its roof as it passes the tree
+  c.lineJoin='round';c.strokeStyle='rgba(190,212,250,.45)';c.lineWidth=1.2/s;c.beginPath();topEdge(c);c.stroke();
+  if(rim>0){c.lineWidth=2.2/s;c.strokeStyle=`rgba(255,120,220,${.55*rim})`;c.beginPath();topEdge(c);c.stroke();
+    c.strokeStyle=`rgba(97,227,255,${.45*rim})`;c.beginPath();c.moveTo(70,5);c.lineTo(60,15);c.lineTo(-100,16);c.stroke();}
+  if(tint>0){c.lineWidth=2.4/s;c.strokeStyle=`rgba(140,200,255,${.75*tint})`;c.beginPath();topEdge(c);c.stroke();
+    c.save();c.globalCompositeOperation='lighter';c.translate(-20,22);c.scale(1,.35);light(c,0,0,120,'rgba(70,140,255,A)',.4*tint);c.restore();}
+  c.fillStyle='#05070b';for(const px of PODS){c.beginPath();c.ellipse(px,16.5,11,3.4,0,0,Math.PI*2);c.fill();c.fillStyle=`rgba(200,245,255,${(.4+.6*pulse)*glow})`;c.fillRect(px-9,16.5,18,2.4);c.fillStyle='#05070b';}   // its lift pods, lit inside
+  // its light strips: white across the nose, red across the tail; its roof beacon
+  c.lineCap='round';c.lineWidth=2.6;c.strokeStyle=`rgba(255,250,235,${glow})`;c.beginPath();c.moveTo(50,-.5);c.lineTo(71,.5);c.stroke();light(c,66,0,26,'rgba(255,245,225,A)',.6*glow);
+  c.strokeStyle=`rgba(255,70,80,${.9*glow})`;c.beginPath();c.moveTo(-109,-1.5);c.lineTo(-96,-1.5);c.stroke();light(c,-104,-1.5,14,'rgba(255,60,70,A)',.45*glow);
+  if(beacon){dot(c,-30,-29,2.6,`rgba(255,255,255,${beacon})`);light(c,-30,-29,40,'rgba(255,255,255,A)',.5*beacon);}
+  c.restore();}
+let on=!/#spinners-now/.test(location.hash);
+function set(v){on=!!v;K.set({spinnerShape:on?spinner:null});}
+set(on);window.FPSkySpinners={get on(){return on;},set,_draw:spinner};
 })();
 
 /* ===== scenes/penthouse/room1/ascent-luxe-everyday.js ===== */
