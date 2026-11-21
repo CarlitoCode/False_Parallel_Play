@@ -8083,7 +8083,8 @@ function boardSprite(t,col,sub,ic){if(PAINT.board)return cached('bd2'+t+col+(sub
    Signs show what they sell as well as say it, and the ads are pictures: celebrities selling things, as Seoul does today,
    pushed further. Every celebrity and brand here is made up (the project's rule: no real people or companies): the idol group
    NOVA9, the singer HANEUL, the actor JUNO, the model RAE; DAL soju, ORBIT phones, SURGE+ water, RED STORM noodles, CRISPY BOX
-   chicken, SAEBYEOK's credit and beauty lines, and PUREUM's bottled air in its own gold. People are drawn as the skyline draws
+   chicken, SAEBYEOK's credit, OLEANDER's skincare (RAE's serum; SAEBYEOK BEAUTY until 21 Nov 2026, the owner: "Fix the
+   ride's Rae poster", so it matches the tower billboards), and PUREUM's bottled air in its own gold. People are drawn as the skyline draws
    them: shapes lit from behind, here in two colours of stage light, never detailed faces. */
 const ICONS={   // each drawn in a box from -1 to 1, as lines of light
   tooth(q){q.moveTo(-.7,-.55);q.quadraticCurveTo(-.7,-.95,-.32,-.85);q.quadraticCurveTo(0,-.7,.32,-.85);q.quadraticCurveTo(.7,-.95,.7,-.55);q.lineTo(.55,.2);q.lineTo(.4,.85);q.lineTo(.15,.25);q.lineTo(-.15,.25);q.lineTo(-.4,.85);q.lineTo(-.55,.2);q.closePath();},
@@ -8129,7 +8130,7 @@ const ADS={
   dal:{bg:['#2a0f3a','#7a1d6a'],who:{name:'HANEUL',hair:'long',l:'255,120,210',r:'120,220,255'},prod:'bottle',pc:['rgba(110,220,160,.85)','rgba(240,250,245,.95)','120,255,190'],brand:'DAL 달 SOJU',line:'Tonight tastes like the moon',col:'255,150,220'},
   orbit:{bg:['#06202e','#0e4a66'],who:{name:'JUNO',hair:'short',l:'110,220,255',r:'200,160,255',turn:1},prod:'phone',brand:'ORBIT 12',line:'See everything.',col:'120,230,255'},
   nova:{bg:['#1b0a2e','#0b2a3e'],group:['255,90,200','90,220,255','255,200,90','160,140,255','120,255,170'],prod:'can',brand:'NOVA9 × SURGE+',line:'Hydrate harder.',col:'120,240,255'},
-  rae:{bg:['#3a1420','#c25a6a'],who:{name:'RAE',hair:'bob',l:'255,200,170',r:'255,120,170',turn:-1},prod:'serum',pc:['rgba(255,220,200,.9)','rgba(255,240,235,.95)','255,190,170'],brand:'SAEBYEOK BEAUTY',line:'Glass skin in 7 days',col:'255,190,200'},
+  rae:{bg:['#3a1420','#c25a6a'],who:{name:'RAE',hair:'bob',l:'255,200,170',r:'255,120,170',turn:-1},prod:'serum',pc:['rgba(255,220,200,.9)','rgba(255,240,235,.95)','255,190,170'],brand:'OLEANDER',line:'Glass skin in 7 days',col:'255,190,200'},
   pureum:{bg:['#1a1406','#4a3a10'],who:{name:'HANEUL',hair:'long',l:'255,214,120',r:'255,188,64'},prod:'air',brand:'PUREUM AIR+',line:'Breathe again.',col:'255,198,90'},
   ramyeon:{bg:['#2a0806','#8a1a10'],prod:'bowl',brand:'RED STORM 라면',line:'Three minutes to heaven',col:'255,140,90'},
   chicken:{bg:['#2a1606','#7a4a10'],prod:'chicken',brand:'CRISPY BOX 치킨',line:'치맥 · chicken and beer, 24 hours',col:'255,200,110'},
@@ -11107,7 +11108,7 @@ function oleanderOff(c,x,y,w,h,line,a){const u=w/100,bh=BAND(w),by=y+h-bh,cx=x+w
   flower(c,cx,by+u*11,u*7,a);
   c.textBaseline='alphabetic';spaced(c,'OLEANDER',cx,by+u*27,`500 ${u*9}px ${HG}`,u*2,PEARL,a,5);
   c.textAlign='center';text(c,line,cx,by+u*36.5,`500 ${u*5.4}px ${MONO}`,ICE,a*.85,2);}
-/* (was SAEBYEOK BEAUTY) */
+/* (was SAEBYEOK BEAUTY; the ride's RAE poster is OLEANDER too) */
 function rae(c,bx,by,s){ // her profile, facing left, in a box s wide and 1.15 s tall: a sleek bob, the line of her face
   const P=(x,y)=>[bx+x*s,by+y*s*1.15];c.beginPath();c.moveTo(...P(.56,.02));
   c.bezierCurveTo(...P(.36,.02),...P(.27,.1),...P(.27,.2));   // forehead
@@ -11211,6 +11212,24 @@ let on=!/#boards-now/.test(location.hash);
 function set(v){on=!!v;K.set({boardArt:on?art:null});}
 function play(name){const S=K._state,t=now();S.ads=S.ads.filter(a=>t-a.t>=a.dur+1.2);for(let i=0;i<3;i++)S.ads.push({t,dur:7,board:i,brand:'SAEBYEOK',camp:name});}
 set(on);window.FPSkyBoards={get on(){return on;},set,play};
+})();
+
+/* ===== scenes/penthouse/room1/skyline-sign-fix.js ===== */
+/* Built into the game 21 Nov 2026 (the owner: "apply the skyline sign fixes"). First reviewed as a mockup (20 Nov 2026, the owner: "signs that are drawn in the background and are clipping through closer
+   buildings"). Through the hook in skyline.js (S.signFix); without this file the signs are
+   drawn as they were.
+   Three faults in the small neon signs on the mid-rise blocks (the hook's note in skyline.js says how each is fixed):
+   - seven hang on the three screen-skinned towers and read as signs seen through the screen: gone
+   - five pairs land on each other: the later one moves up or down its own building to the nearest clear spot
+   - the office towers' window bands run through the letters: each sign hangs on a plain strip of wall
+   Every sign stays fully on its own building; each keeps its colour and flicker. FPSkySigns.set(false) shows them as they are (#skysigns-now starts
+   that way). */
+(function(){
+'use strict';
+const K=window.FPSkyline;if(!K||!K.rebuild)return;
+let on=!/#skysigns-now/.test(location.hash);
+function set(v){on=!!v;K.set({signFix:on});K.rebuild();}
+set(on);window.FPSkySigns={get on(){return on;},set};
 })();
 
 /* ===== scenes/penthouse/room1/ascent-luxe-everyday.js ===== */
