@@ -3669,9 +3669,9 @@ const NM=[],F2=[],MEGA=[],IND={chim:[],cool:[],flare:[]},SCRUB=[],SMALLSIGNS=[],
   SCRUB.push({x:430,w:78,top:262},{x:2280,w:70,top:300});
   const words=['식당','약국','호텔','사우나','편의점','카페','노래방','PC','24','치킨','수리','숙박','병원','마트'],cols=['#ff5fd2','#61e3ff','#9cff7a','#ff7a5a','#b48cff'];
   for(const b of NM)if(q()<.7){const n=1+Math.floor(q()*3);for(let i=0;i<n;i++)
-    SMALLSIGNS.push({x:b.x+8+q()*(b.w-16),y:b.top+22+q()*Math.max(20,FLOOR-b.top-110),text:words[Math.floor(q()*words.length)],col:cols[Math.floor(q()*cols.length)],flick:q()<.14,ph:q()*10,on:1});}
+    SMALLSIGNS.push({x:b.x+8+q()*(b.w-16),y:b.top+22+q()*Math.max(20,FLOOR-b.top-110),text:words[Math.floor(q()*words.length)],col:cols[Math.floor(q()*cols.length)],flick:q()<.14,ph:q()*10,on:1,home:b});}
   {const cand=MID.filter(b=>b.crown==='flat'||b.crown==='ring');for(let i=0;i<4&&cand.length;i++){const b=cand.splice(Math.floor(q()*cand.length),1)[0];b.crown='ring';b.pring=true;}}
-  for(let i=0;i<9;i++){const b=NM[Math.floor(q()*NM.length)];SMALLSIGNS.push({x:b.x+8+q()*(b.w-16),y:b.top+22+q()*Math.max(20,FLOOR-b.top-110),text:'푸름',col:'#ffc95a',flick:false,ph:0,on:1,mark:i%2===0});}   // (every other one carries PUREUM's mark)
+  for(let i=0;i<9;i++){const b=NM[Math.floor(q()*NM.length)];SMALLSIGNS.push({x:b.x+8+q()*(b.w-16),y:b.top+22+q()*Math.max(20,FLOOR-b.top-110),text:'푸름',col:'#ffc95a',flick:false,ph:0,on:1,mark:i%2===0,home:b});}   // (every other one carries PUREUM's mark)
   const tall=MID.filter(b=>b.top<380&&b.w>60);for(let i=0;i<2&&tall.length;i++){const b=tall.splice(Math.floor(q()*tall.length),1)[0];b.face='led';b.crown='flat';LEDS.push({b,p:P_MID,hue:q()*360,ph:q()*6});}
   const wide=NM.filter(b=>b.w>80);for(let i=0;i<3&&wide.length;i++){const b=wide.splice(Math.floor(q()*wide.length),1)[0];b.face='led';LEDS.push({b,p:P_NM,hue:q()*360,ph:q()*6});}
   const crowns=MID.filter(b=>b.top<300&&b.face!=='led');
@@ -3806,7 +3806,8 @@ function buildCity(k=scale*dpr){
     for(const b of NM){crownAndFace(c,b,FLOOR,`rgb(${b.shade},${b.shade+3},${b.shade+12})`,R,{office:'200,225,255',ring:'rgba(127,230,255,.4)',k:1.1});
       c.fillStyle='rgba(140,170,230,.05)';c.fillRect(b.x,b.top,2,FLOOR-b.top);
       if(R()<.5){c.fillStyle='#161a28';c.fillRect(b.x+4+R()*(b.w-14),b.top-6,10,6);}}
-    for(const sg of SMALLSIGNS){if(sg.flick)continue;smallSign(c,sg,1);}
+    if(S.signFix)for(const sg of SMALLSIGNS)signWall(c,sg);
+    for(const sg of SMALLSIGNS){if(sg.flick||!signAt(sg))continue;smallSign(c,sg,1);}
     const g=c.createLinearGradient(0,620,0,FLOOR);g.addColorStop(0,'rgba(255,140,80,0)');g.addColorStop(1,'rgba(255,140,80,.12)');c.fillStyle=g;c.fillRect(-E,620,WW+2*E,FLOOR-620);});
   const hq=makeLayer(P_HQ,-320,FLOOR,(c,E)=>{
     const [sx,sw,st]=HQ_SHAFT,[kx,kw,kt,kb]=HQ_CROWN,[px,pw,pt,pb]=HQ_SPIRE,cx=HQ.x,R=rng(2024);
@@ -3964,8 +3965,8 @@ function boardFor(pan){return pan<-.3?0:pan<.45?1:2;}
 function drawBillboards(c,t){
   const dim=showDim(t);
   NEAR.forEach((tower,i)=>{const b=tower.board;if(!seen(b.x+b.w/2,b.w))return;   // (the glass elevators are drawn with the towers)
-    let a=.18,brand='SAEBYEOK';for(const ad of S.ads)if((ad.board??boardFor(ad.pan))===i){const u=t-ad.t;
-      if(u>=0&&u<ad.dur+1.2){const on=u<.5?(Math.floor(u*16)%2?.2:1):u>ad.dur?1-(u-ad.dur)/1.2:1;const v=on*(ad.silent?dim:1);if(v>a){a=v;brand=ad.brand||'SAEBYEOK';}}}
+    let a=.18,brand='SAEBYEOK',cur=null;for(const ad of S.ads)if((ad.board??boardFor(ad.pan))===i){const u=t-ad.t;
+      if(u>=0&&u<ad.dur+1.2){const on=u<.5?(Math.floor(u*16)%2?.2:1):u>ad.dur?1-(u-ad.dur)/1.2:1;const v=on*(ad.silent?dim:1);if(v>a){a=v;brand=ad.brand||'SAEBYEOK';cur=ad;}}}
     tower.shows=brand;tower.adA=a;   // (what it shows, for its soft discs up at the glass)
     if(brand==='PUREUM'){c.save();c.beginPath();c.rect(b.x,b.y,b.w,b.h);c.clip();   // a PUREUM ad: its cold light, its name, its line
       const g=c.createLinearGradient(b.x,b.y,b.x,b.y+b.h);g.addColorStop(0,`rgba(80,52,12,${.7*a})`);g.addColorStop(1,`rgba(30,18,4,${.7*a})`);c.fillStyle=g;c.fillRect(b.x,b.y,b.w,b.h);
@@ -3979,6 +3980,8 @@ function drawBillboards(c,t){
         puMark(c,cx,my,ms,`rgb(${PU})`);
         c.font='500 8px "Azeret Mono",monospace';c.fillText('BREATHE AGAIN.',cx,b.y+b.h-24);
         c.restore();light(c,cx,my,160,`rgba(${PU},A)`,a>.3?.14*a:0);return;}}
+    // (review hook, 21 Nov 2026: S.boardArt draws SAEBYEOK's ads instead (skyline-boards.js) and returns its light's colour)
+    if(S.boardArt){const L=S.boardArt(c,b,a,t,i,cur);if(L){light(c,b.x+b.w/2,b.y+b.h/2,220,L,a>.3?.12*a:0);return;}}
 
     c.save();c.beginPath();c.rect(b.x,b.y,b.w,b.h);c.clip();
     const hue=(t*12+i*140)%360,g=c.createLinearGradient(b.x,b.y,b.x,b.y+b.h);
@@ -4584,10 +4587,33 @@ function drawHQ(c,t){ // PUREUM's headquarters: its glow, floodlights, guards, t
 }
 function drawHQSpill(c){ // its light falling on the towers in front of it
   layer(c,P_HQ,()=>{if(!seen(HQ.x,900))return;c.save();c.globalCompositeOperation='lighter';light(c,HQ.x,300,560,`rgba(${PU},A)`,.05);c.restore();});}
+/* Review hook (20 Nov 2026, the owner: signs "drawn in the background and clipping through closer buildings", then "are you
+   sure some of the other signs aren't also bugged?"). Off unless a page sets S.signFix (skyline-sign-fix.js). Three faults:
+   - seven signs hang on the three screen-skinned towers, whose moving light and panel grid are drawn over them, so they read
+     as signs seen through the screen: with the fix they are gone (a screen tower is its own sign)
+   - signs were placed at random with no room kept between them, so five pairs land on each other (치킨 and 푸름 read as one
+     jumble): the later one moves up or down its own building, a floor at a time, to the nearest clear spot
+   - the office towers' bright window bands ran straight through the letters, so a sign looked set behind the facade: each
+     sign now hangs on a plain strip of wall, a shade darker than the building, with a faint seam of its colour at the sides
+   and every sign is kept fully on its own building's face. Nothing else moves: the plan's random draws are unchanged. */
+const signW=sg=>/^[A-Z0-9]+$/.test(sg.text)?sg.text.length*3.5:5,signN=sg=>/^[A-Z0-9]+$/.test(sg.text)?1:[...sg.text].length;
+const signBox=(sg,x,y)=>({l:x-signW(sg)-3,r:x+signW(sg)+3,t:y-11-(sg.mark?17:0),b:y+(signN(sg)-1)*11+4});
+let SIGNPLAN=null;
+function signPlan(){if(SIGNPLAN)return SIGNPLAN;const m=new Map(),kept=[],hit=(a,b)=>a.l<b.r+2&&b.l<a.r+2&&a.t<b.b+2&&b.t<a.b+2;
+  const tries=[0];for(let d=11;d<=154;d+=11)tries.push(d,-d);
+  for(const sg of SMALLSIGNS){const b=sg.home;let at=null;
+    if(b.face!=='led'){const w=signW(sg)+4,x=clamp(sg.x,b.x+w,b.x+b.w-w);
+      for(const d of tries){const B=signBox(sg,x,sg.y+d);if(B.t<b.top+6||B.b>FLOOR-56||kept.some(k=>hit(k,B)))continue;kept.push(B);at={x,y:sg.y+d,B};break;}}
+    m.set(sg,at);}
+  return SIGNPLAN=m;}
+const signAt=sg=>S.signFix?signPlan().get(sg):sg;   // (null: not shown)
+function signWall(c,sg){const p=signAt(sg);if(!p||!p.B)return;const B=p.B,b=sg.home,k=Math.max(0,b.shade-3);
+  c.fillStyle=`rgb(${k},${k+3},${k+11})`;c.fillRect(B.l,B.t,B.r-B.l,B.b-B.t);
+  c.globalAlpha=.22;c.fillStyle=sg.col;c.fillRect(B.l,B.t,1,B.b-B.t);c.fillRect(B.r-1,B.t,1,B.b-B.t);c.globalAlpha=1;}
 function smallSign(c,sg,a){c.save();c.font='700 10px "Noto Sans KR","Apple SD Gothic Neo",sans-serif';c.textAlign='center';c.globalAlpha=a;c.shadowColor=sg.col;c.shadowBlur=6;c.fillStyle=sg.col;
-  const chars=/^[A-Z0-9]+$/.test(sg.text)?[sg.text]:[...sg.text];chars.forEach((ch,j)=>c.fillText(ch,sg.x,sg.y+j*11));
-  if(sg.mark)puMark(c,sg.x,sg.y-19,12,sg.col);c.restore();}
-function drawSmallSigns(c,t,dt){for(const sg of SMALLSIGNS){if(!sg.flick||!seen(sg.x,20))continue;if(Math.random()<dt*.8)sg.on=Math.random()<.35?.15:1;smallSign(c,sg,.3+.7*sg.on);}}
+  const chars=/^[A-Z0-9]+$/.test(sg.text)?[sg.text]:[...sg.text];const p=signAt(sg);if(!p){c.restore();return;}chars.forEach((ch,j)=>c.fillText(ch,p.x,p.y+j*11));
+  if(sg.mark)puMark(c,p.x,p.y-19,12,sg.col);c.restore();}
+function drawSmallSigns(c,t,dt){for(const sg of SMALLSIGNS){if(!sg.flick||!signAt(sg)||!seen(sg.x,20))continue;if(Math.random()<dt*.8)sg.on=Math.random()<.35?.15:1;smallSign(c,sg,.3+.7*sg.on);}}
 function drawIndustry(c,t){ // plumes rising from the stacks, lit from below; flare stacks burning
   const puff=(x,y,k,ph,w)=>{for(let i=0;i<3;i++){const a=((t*.05+ph+i/3)%1),px=x+a*80+Math.sin(a*4+ph)*6,py=y-a*170,r=w*.8+a*60;if(!seen(px,r))continue;
     light(c,px,py,r,a<.3?'rgba(255,160,100,A)':'rgba(170,140,190,A)',.22*(1-a)*Math.min(1,a*5));}};
@@ -4828,7 +4854,7 @@ function drawBokeh(c,t,g){
     br(b.x+b.w/2,600,b.y+b.h*.3,46,i===1?'255,120,220':'120,200,255',.8);br(b.x+b.w/2,600,b.y+b.h*.75,38,'255,180,120',.6);});
   br(HQ.x,2000,HQ_CROWN[2]+44,52,PU,.8);br(HQ.x-200,2000,HQ_CROWN[3]+8,30,PU,.5);br(HQ.x+200,2000,HQ_CROWN[3]+8,30,PU,.5);
   br(HANEUL.x+HANEUL.w/2,1800,415,34,HN,.8);
-  for(let i=0;i<SMALLSIGNS.length;i+=4){const sg=SMALLSIGNS[i];br(sg.x,1000,sg.y+8,22,hex(sg.col),.6);}
+  for(let i=0;i<SMALLSIGNS.length;i+=4){const sg=SMALLSIGNS[i],p=signAt(sg);if(p)br(p.x,1000,p.y+8,22,hex(sg.col),.6);}
   for(const x of [200,520,860,1650,1980])br(x,1400,760,30,'255,170,90',.6);   // street light far below
   c.restore();}
 function drawReflection(c,t,a){
@@ -5042,7 +5068,8 @@ function event(name,d){
   S.ads=S.ads.filter(a=>t-a.t<a.dur+2);
 }
 // set({lockGlint:false}) once the door has opened; set({craftHD:false}) shows the old flat craft (review pages); _state, _occ and _via are read by tools/playtest.py
-window.FPSkyline={mount,event,atGlass,cue,drawRide,viewX:()=>(vx0+vx1)/2,set:o=>Object.assign(S,o),_state:S,_occ:OCC,_via:VIA,_craftIssues:craftIssues,_spr:SPR};
+window.FPSkyline={mount,event,atGlass,cue,drawRide,rebuild:()=>{layers=null;RIDE_C.layers=null;},   // (rebuild: the cached rows are drawn again on the next frame)
+  viewX:()=>(vx0+vx1)/2,set:o=>Object.assign(S,o),_state:S,_occ:OCC,_via:VIA,_craftIssues:craftIssues,_spr:SPR};
 })();
 
 </script>
@@ -10969,6 +10996,221 @@ function spinner(c,o){const {x,y,s,dir,glow,pulse,beacon,rim,tint,light,dot,beam
 let on=!/#spinners-now/.test(location.hash);
 function set(v){on=!!v;K.set({spinnerShape:on?spinner:null});}
 set(on);window.FPSkySpinners={get on(){return on;},set,_draw:spinner};
+})();
+
+/* ===== scenes/penthouse/room1/skyline-boards.js ===== */
+/* Built into the game 21 Nov 2026 (the owner: "That's good. Publish."). First reviewed as a mockup (21 Nov 2026, the owner: "the giant billboards signs (other than the Pureum ones) are all just text and
+   basic. Redesign them so they look more visually appealing and capture the players attention, like a real sign would.
+   Ensure the designs are consistent with the brand"). Through the hook in skyline.js (S.boardArt); without this file the boards
+   show the old text card.
+   Second pass (21 Nov 2026, the owner: skincare is awkward for a bank, and the finance ad should market better):
+   The three tower billboards play their ads when they are not playing PUREUM. Until now that was one SAEBYEOK card of text
+   over a colour wash. Now three ads take turns, from two advertisers:
+   - SAEBYEOK (새벽, "dawn"), the bank that sells a new start on credit ("Approved in one second", "No questions asked"):
+     its full name SAEBYEOK FINANCIAL; its mark a sun half risen on the horizon with three rays and its reflection; dawn
+     colours, magenta into peach, never PUREUM's gold; every ad ends on its sign-off: the mark, SAEBYEOK large in heavy
+     tube letters, FINANCIAL small beneath it
+     - A NEW DAWN, the brand film: a sun striped in slats of light rises over a dark city as the ad plays, 새벽 above it
+     - HOME LOANS, MOVE UP.: a tower rising out of the city at dawn, a lift climbing it to a home at the top that lights
+       up, someone looking out; "Your home in the sky awaits", nine million families (see home())
+   - OLEANDER, a skincare house of its own (the owner, 21 Nov 2026: "something that sounds healthy but actually, at its
+     core, is poison"): named for a pretty, gentle-sounding flower that is poison in every part; pearl and ice, the
+     flower for its mark, its name spaced wide and thin. GLASS SKIN, IN 7 DAYS, with RAE: RAE in profile rim-lit, a glint sweeping her cheek, sparkles, its serum in a
+     dropper bottle drawn in lines of light
+   Drawn as the skyline draws its signs: dark glass, pictures in light, tube letters. When a board rests between ads it
+   shows SAEBYEOK's brand film, dim. The PUREUM ads are unchanged.
+   FPSkyBoards.set(false) shows the boards as they are (#boards-now starts that way); FPSkyBoards.play(name) plays one
+   campaign on all three boards (the review page's buttons). */
+(function(){
+'use strict';
+const K=window.FPSkyline;if(!K||!K.set)return;
+const TAU=Math.PI*2,EN='"Unbounded","Arial Black",sans-serif',KO='"Noto Sans KR","Apple SD Gothic Neo",sans-serif',MONO='"Azeret Mono",monospace',HG='"Hanken Grotesk","Noto Sans KR",sans-serif';
+const MAG='255,95,210',PEACH='255,176,136',ROSE='255,190,200',MINT='140,255,200',VIO='150,110,255';
+const sm=(a,b,x)=>{x=Math.max(0,Math.min(1,(x-a)/(b-a)));return x*x*(3-2*x);};
+const now=()=>performance.now()/1000;
+
+/* ---------- drawn in light ---------- */
+function tube(c,t,x,y,size,col,a,face=.22){if(a<=0)return;c.save();c.lineJoin='round';c.globalAlpha=Math.min(1,a);c.fillStyle=`rgba(${col},${face})`;c.fillText(t,x,y);
+  c.shadowColor=`rgb(${col})`;c.shadowBlur=9*a;c.strokeStyle=`rgba(${col},.95)`;c.lineWidth=Math.max(.35,size*.075);c.strokeText(t,x,y);
+  c.shadowBlur=0;c.strokeStyle='rgba(255,255,255,.75)';c.lineWidth=Math.max(.18,size*.024);c.strokeText(t,x,y);c.restore();}
+function lit(c,col,lw,a,draw){if(a<=0)return;c.save();c.globalAlpha=Math.min(1,a);c.lineJoin='round';c.lineCap='round';c.beginPath();draw();
+  c.shadowColor=`rgb(${col})`;c.shadowBlur=7*a;c.strokeStyle=`rgba(${col},.9)`;c.lineWidth=lw;c.stroke();
+  c.shadowBlur=0;c.strokeStyle='rgba(255,255,255,.6)';c.lineWidth=lw*.35;c.stroke();c.restore();}
+function text(c,t,x,y,font,col,a,blur=3){c.save();c.globalAlpha=Math.min(1,a);c.font=font;c.shadowColor=`rgb(${col})`;c.shadowBlur=blur*a;c.fillStyle=`rgba(${col},.92)`;c.fillText(t,x,y);c.restore();}
+function glow(c,x,y,r,col,a){if(a<=0)return;const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${col},${a})`);g.addColorStop(1,`rgba(${col},0)`);c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);}
+function spark(c,x,y,r,col,a){if(a<=0)return;lit(c,col,r*.18,a,()=>{c.moveTo(x-r,y);c.lineTo(x+r,y);c.moveTo(x,y-r);c.lineTo(x,y+r);});}
+
+/* ---------- the brand ---------- */
+// its mark: the sun half risen on the horizon, three rays, two lines of its reflection
+function mark(c,cx,cy,r,a){
+  lit(c,PEACH,r*.14,a,()=>{c.moveTo(cx+r*.62,cy);c.arc(cx,cy,r*.62,0,Math.PI,true);
+    for(const k of [-1,0,1]){const g=-Math.PI/2+k*.66;c.moveTo(cx+Math.cos(g)*r*.86,cy+Math.sin(g)*r*.86);c.lineTo(cx+Math.cos(g)*r*1.14,cy+Math.sin(g)*r*1.14);}});
+  lit(c,MAG,r*.14,a,()=>{c.moveTo(cx-r*1.3,cy+r*.06);c.lineTo(cx+r*1.3,cy+r*.06);});
+  lit(c,MAG,r*.1,a*.6,()=>{c.moveTo(cx-r*.46,cy+r*.32);c.lineTo(cx+r*.46,cy+r*.32);c.moveTo(cx-r*.22,cy+r*.54);c.lineTo(cx+r*.22,cy+r*.54);});}
+// the end of every ad: a band of dark glass, the mark, SAEBYEOK, and the line it is for
+const BAND=w=>w*.42;
+function signoff(c,x,y,w,h,line,col,a){const u=w/100,bh=BAND(w),by=y+h-bh,cx=x+w/2;
+  c.fillStyle='rgba(5,3,9,.82)';c.fillRect(x,by,w,bh);
+  lit(c,MAG,.7,a*.8,()=>{c.moveTo(x+5,by);c.lineTo(x+w-5,by);});
+  mark(c,cx,by+u*12,u*7.5,a);
+  c.textAlign='center';c.textBaseline='alphabetic';c.font=`700 ${u*11}px ${EN}`;tube(c,'SAEBYEOK',cx,by+u*28,u*11,MAG,a,.28);
+  text(c,line,cx,by+u*37,`600 ${u*5.6}px ${MONO}`,col,a*.9,2);}
+// dark glass, and a breath of the ad's colour from inside it
+function glass(c,x,y,w,h,col,gx,gy,a){c.fillStyle='#07050c';c.fillRect(x,y,w,h);glow(c,x+w*gx,y+h*gy,Math.max(w,h)*.55,col,.22*a);}
+// the screen's own texture: fine scan lines, and a soft sheen down the glass
+function screen(c,x,y,w,h,t,a){c.fillStyle='rgba(0,0,0,.22)';for(let yy=y;yy<y+h;yy+=1.6)c.fillRect(x,yy,w,.5);
+  const sy=y+((t*.12)%1.4-.2)*h,g=c.createLinearGradient(0,sy-30,0,sy+30);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.5,`rgba(255,255,255,${.035*a})`);g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.fillRect(x,sy-30,w,60);}
+
+/* ---------- A NEW DAWN: the brand film ---------- */
+function dawn(c,x,y,w,h,a,u0,t,seed){const u=w/100,R=h-BAND(w),hz=y+R*.8,cx=x+w/2;
+  let s=seed;const rnd=()=>{s=(s*16807)%2147483647;return s/2147483647;};
+  const sky=c.createLinearGradient(0,y,0,hz);sky.addColorStop(0,'#0a0617');sky.addColorStop(.4,`rgb(${Math.round(24+50*a)},12,${Math.round(50+40*a)})`);sky.addColorStop(.75,`rgb(${Math.round(60+140*a)},${Math.round(24+30*a)},${Math.round(80+60*a)})`);sky.addColorStop(1,`rgb(${Math.round(80+175*a)},${Math.round(50+100*a)},${Math.round(80+60*a)})`);
+  c.fillStyle=sky;c.fillRect(x,y,w,hz-y);
+  const rise=u0==null?.55:sm(0,1,u0),r=Math.min(w*.4,R*.2),sy=hz+r*.4-r*1.3*rise;   // (the sun rises as the ad plays; at rest it is half up)
+  for(let k=0;k<16;k++){const sx=x+rnd()*w,yy=y+R*(.3+rnd()*.25),tw=.5+.5*Math.sin(t*2+k);c.fillStyle=`rgba(255,230,250,${(1-rise)*.7*tw*a})`;c.fillRect(sx,yy,u*.9,u*.9);}   // the last stars, going out
+  c.save();c.beginPath();c.rect(x,y,w,hz-y);c.clip();
+  glow(c,cx,sy,r*2.4,'255,120,170',.35*a);
+  const sg=c.createLinearGradient(0,sy-r,0,sy+r);sg.addColorStop(0,`rgba(255,226,160,${.95*a+.05})`);sg.addColorStop(.6,`rgba(255,130,150,${.9*a+.05})`);sg.addColorStop(1,`rgba(255,70,180,${.9*a+.05})`);
+  c.fillStyle=sg;c.beginPath();c.arc(cx,sy,r,0,TAU);c.fill();
+  c.fillStyle=sky;const f=(t*.35)%1;for(let k=0;k<7;k++){const q=(k+f)/7,yy=sy+q*r*1.05;c.fillRect(x,yy,w,Math.max(.4,q*r*.11));}   // (slats of light, drifting down through it)
+  c.restore();
+  // the city along the horizon, dark against the dawn, a few windows lit
+  c.fillStyle='#0b0713';
+  for(let xx=x-2;xx<x+w;){const bw=u*(6+rnd()*12),bh2=Math.min(R*.12,u*(6+rnd()*26))*(Math.abs(xx+bw/2-cx)<r*.7?.5:1);c.fillRect(xx,hz-bh2,bw,bh2+1);
+    if(rnd()<.5){c.fillStyle=`rgba(255,200,150,${.5*a})`;for(let k=0;k<3;k++)c.fillRect(xx+u+rnd()*(bw-u*3),hz-bh2+u*2+rnd()*(bh2-u*4),u*1.2,u*1.2);c.fillStyle='#0b0713';}
+    xx+=bw+u*.6;}
+  // the water below: the sun's reflection in broken lines
+  const wg=c.createLinearGradient(0,hz,0,y+R);wg.addColorStop(0,'#160a1e');wg.addColorStop(1,'#07050c');c.fillStyle=wg;c.fillRect(x,hz,w,y+R-hz);
+  for(let k=0;k<5;k++){const yy=hz+u*3+k*(y+R-hz-u*5)/5,hw2=r*(.9-k*.14)*(.85+.15*Math.sin(t*2+k)),off=Math.sin(t*1.3+k*1.7)*u*2;
+    c.fillStyle=`rgba(255,${150+k*12},170,${(.55-k*.08)*(.3+.7*rise)*a})`;c.fillRect(cx-hw2+off,yy,hw2*2,u*1.1);}
+  // 새벽, stacked, in tube letters
+  c.textAlign='center';c.textBaseline='alphabetic';const fs=Math.min(w*.3,R*.11);c.font=`800 ${fs}px ${KO}`;
+  tube(c,'새',cx,y+R*.04+fs,fs,MAG,a,.3);tube(c,'벽',cx,y+R*.04+fs*2.1,fs,MAG,a,.3);
+  text(c,'EVERY NIGHT ENDS.',cx,y+R*.04+fs*2.1+u*10,`600 ${Math.min(u*6,fs*.2)}px ${MONO}`,PEACH,a*.85,2);
+  signoff(c,x,y,w,h,'FINANCIAL',PEACH,a);
+  return 'rgba(255,110,190,A)';}
+
+/* ---------- OLEANDER: its own brand, glass skin, with RAE ----------
+   A skincare house, not a bank's sideline. Its name sounds soft and natural, a flowering garden shrub, and the oleander is
+   poison in every part: the city's beauty, at its core. Pearl light and ice, the five-petalled flower for its mark, its
+   name spaced wide and thin (SAEBYEOK's is heavy tube letters), and a sign-off of its own. Nothing on the board says it
+   is poison. */
+const PEARL='236,240,255',ICE='170,215,255';
+function spaced(c,t,cx,y,font,sp,col,a,blur=3){c.save();c.font=font;const ch=[...t],ws=ch.map(x=>c.measureText(x).width),tw=ws.reduce((p,q)=>p+q,0)+sp*(ch.length-1);
+  let xx=cx-tw/2;c.textAlign='left';ch.forEach((x,i)=>{text(c,x,xx,y,font,col,a,blur);xx+=ws[i]+sp;});c.restore();}
+function flower(c,cx,cy,r,a){   // its mark: an oleander flower, five petals turning the same way, a rose heart
+  lit(c,PEARL,r*.09,a,()=>{for(let k=0;k<5;k++){const g=-Math.PI/2+k*TAU/5,px=cx+Math.cos(g)*r*.52,py=cy+Math.sin(g)*r*.52;c.moveTo(px+Math.cos(g+.9)*r*.46,py+Math.sin(g+.9)*r*.46);c.ellipse(px,py,r*.5,r*.3,g+.25,.9,.9+TAU);}});
+  lit(c,ROSE,r*.12,a,()=>{c.moveTo(cx+r*.13,cy);c.arc(cx,cy,r*.13,0,TAU);});}
+function oleanderOff(c,x,y,w,h,line,a){const u=w/100,bh=BAND(w),by=y+h-bh,cx=x+w/2;
+  c.fillStyle='rgba(8,8,14,.84)';c.fillRect(x,by,w,bh);
+  lit(c,PEARL,.5,a*.6,()=>{c.moveTo(x+w*.2,by+u*2);c.lineTo(x+w*.8,by+u*2);});
+  flower(c,cx,by+u*11,u*7,a);
+  c.textBaseline='alphabetic';spaced(c,'OLEANDER',cx,by+u*27,`500 ${u*9}px ${HG}`,u*2,PEARL,a,5);
+  c.textAlign='center';text(c,line,cx,by+u*36.5,`500 ${u*5.4}px ${MONO}`,ICE,a*.85,2);}
+/* (was SAEBYEOK BEAUTY) */
+function rae(c,bx,by,s){ // her profile, facing left, in a box s wide and 1.15 s tall: a sleek bob, the line of her face
+  const P=(x,y)=>[bx+x*s,by+y*s*1.15];c.beginPath();c.moveTo(...P(.56,.02));
+  c.bezierCurveTo(...P(.36,.02),...P(.27,.1),...P(.27,.2));   // forehead
+  c.bezierCurveTo(...P(.27,.27),...P(.24,.31),...P(.24,.34));   // brow
+  c.bezierCurveTo(...P(.2,.39),...P(.13,.44),...P(.12,.47));   // nose
+  c.bezierCurveTo(...P(.14,.5),...P(.19,.5),...P(.21,.51));
+  c.bezierCurveTo(...P(.18,.54),...P(.19,.56),...P(.21,.57));   // lips
+  c.bezierCurveTo(...P(.18,.59),...P(.19,.62),...P(.22,.63));
+  c.bezierCurveTo(...P(.21,.68),...P(.25,.73),...P(.31,.74));   // chin
+  c.bezierCurveTo(...P(.38,.75),...P(.44,.73),...P(.47,.72));   // jaw
+  c.lineTo(...P(.45,.86));c.bezierCurveTo(...P(.42,.94),...P(.36,.98),...P(.3,1));   // neck, shoulder
+  c.lineTo(...P(.95,1));c.bezierCurveTo(...P(.86,.95),...P(.78,.9),...P(.74,.8));
+  c.bezierCurveTo(...P(.9,.8),...P(.97,.7),...P(.96,.5));   // the bob, cut at the jaw
+  c.bezierCurveTo(...P(.97,.2),...P(.8,.02),...P(.56,.02));c.closePath();}
+function raeEdge(c,bx,by,s){const P=(x,y)=>[bx+x*s,by+y*s*1.15];c.moveTo(...P(.4,.03));c.bezierCurveTo(...P(.3,.06),...P(.27,.12),...P(.27,.2));
+  c.bezierCurveTo(...P(.27,.27),...P(.24,.31),...P(.24,.34));c.bezierCurveTo(...P(.2,.39),...P(.13,.44),...P(.12,.47));
+  c.bezierCurveTo(...P(.14,.5),...P(.19,.5),...P(.21,.51));c.bezierCurveTo(...P(.18,.54),...P(.19,.56),...P(.21,.57));
+  c.bezierCurveTo(...P(.18,.59),...P(.19,.62),...P(.22,.63));c.bezierCurveTo(...P(.21,.68),...P(.25,.73),...P(.31,.74));c.bezierCurveTo(...P(.38,.75),...P(.44,.73),...P(.47,.72));}
+function serum(c,bx,by,bh,u,a,t){const bw=bh*.5,lw=Math.max(.5,bh*.022);   // the serum: a dropper bottle in lines of light, a glint running up it
+  const b0=by-bh*.64,cr=bw*.18;
+  c.save();c.globalAlpha=a;const lg=c.createLinearGradient(0,b0,0,by);lg.addColorStop(0,'rgba(255,170,200,.06)');lg.addColorStop(.45,'rgba(255,170,200,.08)');lg.addColorStop(.46,'rgba(255,140,190,.3)');lg.addColorStop(1,'rgba(255,120,180,.38)');
+  c.fillStyle=lg;c.beginPath();c.roundRect(bx-bw/2,b0,bw,by-b0,cr);c.fill();c.restore();   // (the serum inside, half full)
+  lit(c,ROSE,lw,a,()=>{c.roundRect(bx-bw/2,b0,bw,by-b0,cr);   // the body
+    c.rect(bx-bw*.3,by-bh*.76,bw*.6,bh*.12);   // the collar
+    c.moveTo(bx-bw*.16,by-bh*.76);c.lineTo(bx-bw*.16,by-bh*.86);c.bezierCurveTo(bx-bw*.22,by-bh*.98,bx+bw*.22,by-bh*.98,bx+bw*.16,by-bh*.86);c.lineTo(bx+bw*.16,by-bh*.76);});   // the bulb
+  lit(c,'255,235,240',lw*.6,a*.7,()=>{c.moveTo(bx-bw*.32,b0+bh*.08);c.lineTo(bx-bw*.32,by-bh*.1);});   // a highlight down its glass
+  c.textAlign='center';text(c,'GLASS',bx,b0+bh*.24,`700 ${bw*.17}px ${EN}`,ROSE,a*.85,2);text(c,'SERUM',bx,b0+bh*.33,`600 ${bw*.11}px ${MONO}`,'255,220,230',a*.7,1);
+  const d=(t*.45)%1;glow(c,bx-bw*.25,by-bh*(.1+.5*d),bw*.45,'255,235,240',.45*a*Math.sin(d*Math.PI));}
+function beauty(c,x,y,w,h,a,u0,t){const u=w/100,R=h-BAND(w),cx=x+w/2;
+  glass(c,x,y,w,h,'200,190,255',.75,.2,a);glow(c,x+w*.15,y+R*.45,w*.7,'255,170,200',.1*a);
+  const s=Math.min(w*.86,R*.36),fx=x+w*.12,fy=y+R*.03;
+  c.save();rae(c,fx,fy,s);c.fillStyle='#120912';c.fill();c.clip();
+  glow(c,fx+s*.9,fy+s*.3,s*.7,VIO,.25*a);glow(c,fx+s*.1,fy+s*.5,s*.5,'255,170,190',.3*a);   // (lit from both sides)
+  const gu=u0==null?((t*.25)%1):((u0*1.6)%1),gp=sm(.1,.9,gu);glow(c,fx+s*(.16+gp*.2),fy+s*1.15*(.3+gp*.4),s*.18,'255,255,255',.55*a*Math.sin(gp*Math.PI));   // a glint sweeping her cheek
+  c.restore();
+  lit(c,ROSE,u*1.1,a,()=>raeEdge(c,fx,fy,s));   // the rim light along her face
+  lit(c,VIO,u*.9,a*.8,()=>{const P=(px,py)=>[fx+px*s,fy+py*s*1.15];c.moveTo(...P(.62,.03));c.bezierCurveTo(...P(.82,.06),...P(.97,.22),...P(.96,.5));c.bezierCurveTo(...P(.97,.7),...P(.9,.8),...P(.74,.8));});
+  for(let k=0;k<5;k++){const tw=Math.max(0,Math.sin(t*2.1+k*1.9));spark(c,x+w*[.84,.12,.74,.9,.16][k],y+R*[.06,.16,.36,.62,.86][k],u*(2+2.5*tw),'255,235,245',a*tw);}
+  // the words
+  c.textBaseline='alphabetic';const fs=Math.min(u*15,R*.055),tx=x+u*8,ty=fy+s*1.15+fs*1.15;c.textAlign='left';c.font=`800 ${fs}px ${EN}`;
+  tube(c,'GLASS',tx,ty,fs,ROSE,a,.25);tube(c,'SKIN',tx,ty+fs*1.1,fs,ROSE,a,.25);
+  const sp=(t*.8)%1;spark(c,tx+fs*2.6,ty-fs*.75,u*(1+3*Math.sin(sp*Math.PI)),'255,255,255',a*Math.sin(sp*Math.PI));   // (the glass glints)
+  const ly=ty+fs*1.1+u*10;text(c,'IN 7 DAYS',tx,ly,`600 ${u*6.4}px ${MONO}`,'255,220,230',a*.9,2);text(c,'with RAE',tx,ly+u*9,`italic 600 ${u*6.4}px ${HG}`,ROSE,a*.8,2);
+  // the serum: large in the room left below the words, or small beside them on a short board
+  const top=ly+u*16,bot=y+R-u*8;
+  if(bot-top>R*.16){const bh=Math.min(bot-top,w*.8);glow(c,cx,bot-bh*.35,bh*.75,'255,140,190',.22*a);
+    lit(c,ROSE,u*.6,a*.6,()=>c.ellipse(cx,bot,bh*.32,bh*.05,0,0,TAU));serum(c,cx,bot,bh,u,a,t);}
+  else serum(c,x+w*.8,ty+fs*1.1,fs*2.4,u,a,t);
+  oleanderOff(c,x,y,w,h,'GLASS SKIN SERUM',a);
+  return 'rgba(220,210,255,A)';}
+
+/* ---------- SAEBYEOK HOME LOANS: MOVE UP. ----------
+   Built the way finance ads that work are built: one promise in two words; the outcome you want rather than the product
+   (your home up in the sky, the life the player rides past on the way up), not a card or a rate; one picture that shows
+   it; and proof (nine million families). (The owner, 21 Nov 2026: no "approved tonight", which looked cheap; no QR code,
+   which didn't fit; no small print; the motto "Your home in the sky awaits".) */
+function home(c,x,y,w,h,a,u0,t,seed){const u=w/100,R=h-BAND(w),cx=x+w/2,tall=R/w>2.5;
+  glass(c,x,y,w,h,'255,120,170',.5,.4,a);
+  // the promise, in two words
+  c.textAlign='center';c.textBaseline='alphabetic';const fs=Math.min(w*.24,R*.09);let cy=y+R*.03;c.font=`800 ${fs}px ${EN}`;
+  tube(c,'MOVE',cx,cy+fs,fs,'255,214,226',a,.3);tube(c,'UP.',cx,cy+fs*2.05,fs,MAG,a,.3);cy+=fs*2.05+u*5;
+  // what follows the picture, measured first so the picture takes the rest
+  const below=u*11+(tall?u*12:0)+u*12,sh=y+R-below-cy,sx=x+u*5,sw=w-u*10;
+  // the picture: a tower rising out of the city at dawn, a lift climbing it to a home at the top that lights up
+  c.save();c.beginPath();c.roundRect(sx,cy,sw,sh,u*3);c.clip();
+  const sky=c.createLinearGradient(0,cy,0,cy+sh);sky.addColorStop(0,'#0c0718');sky.addColorStop(.6,`rgb(${Math.round(60+120*a)},${Math.round(22+30*a)},${Math.round(80+50*a)})`);sky.addColorStop(1,`rgb(${Math.round(80+170*a)},${Math.round(60+90*a)},${Math.round(90+50*a)})`);c.fillStyle=sky;c.fillRect(sx,cy,sw,sh);
+  const sr=sw*.2,sux=sx+sw*.28,suy=cy+sh*.86;glow(c,sux,suy,sr*3,'255,130,170',.3*a);
+  const sg=c.createLinearGradient(0,suy-sr,0,suy+sr);sg.addColorStop(0,`rgba(255,226,160,${.9*a+.05})`);sg.addColorStop(1,`rgba(255,80,170,${.9*a+.05})`);c.fillStyle=sg;c.beginPath();c.arc(sux,suy,sr,0,TAU);c.fill();
+  c.fillStyle=sky;for(let k=0;k<5;k++){const q=(k+(t*.3)%1)/5;c.fillRect(sx,suy+q*sr,sw,Math.max(.3,q*sr*.12));}
+  let s2=seed;const rnd=()=>{s2=(s2*16807)%2147483647;return s2/2147483647;};c.fillStyle='#0b0713';
+  for(let xx=sx-1;xx<sx+sw;){const bw=u*(5+rnd()*9),bh2=sh*(.06+rnd()*.18);c.fillRect(xx,cy+sh-bh2,bw,bh2+1);xx+=bw+u*.5;}
+  const tw=sw*.2,tx=sx+sw*.66-tw/2,top=cy+sh*.16,bot=cy+sh;c.fillStyle='#0d0816';c.fillRect(tx,top,tw,bot-top);   // the tower
+  c.fillStyle=`rgba(255,200,160,${.35*a})`;for(let yy=top+sh*.12;yy<bot-u*3;yy+=u*3.2)if(rnd()<.35)c.fillRect(tx+u*1.5+rnd()*(tw-u*4),yy,u*1.4,u*1.2);
+  const p=u0==null?.55:sm(.05,.72,u0),home=p>.97,ly=bot-(bot-top-sh*.02)*p;   // (the lift climbs as the ad plays; at rest it is halfway)
+  const ph=sh*.075,pw=tw*1.7,px=tx+tw/2-pw/2,py=top-ph;   // the home at the top: a glass penthouse wider than the tower
+  c.fillStyle='#120a1c';c.fillRect(px,py,pw,ph);
+  if(home){glow(c,px+pw/2,py+ph/2,pw*.9,'255,200,140',.45*a);c.fillStyle=`rgba(255,214,160,${.85*a})`;c.fillRect(px+u,py+u,pw-u*2,ph-u*2);
+    c.fillStyle='#1a0e1a';const fx=px+pw*.62,fy=py+ph-u;c.beginPath();c.arc(fx,fy-ph*.62,ph*.13,0,TAU);c.fill();c.fillRect(fx-ph*.12,fy-ph*.48,ph*.24,ph*.48-u*.2);}   // (someone home, looking out)
+  lit(c,PEACH,u*.5,a*.8,()=>c.rect(px,py,pw,ph));
+  lit(c,MAG,u*.8,a*.7,()=>{c.moveTo(tx-u*.6,bot);c.lineTo(tx-u*.6,ly);});   // the lift's trail
+  glow(c,tx-u*.6,ly,u*5,'255,220,240',.9*a);c.fillStyle=`rgba(255,240,250,${a})`;c.fillRect(tx-u*1.6,ly-u*1.6,u*2,u*3.2);
+  c.restore();lit(c,'255,200,220',u*.5,a*.5,()=>c.roundRect(sx,cy,sw,sh,u*3));
+  cy+=sh+u*9;
+  // the outcome, then the proof (no "approved tonight": the owner, 21 Nov 2026, "it looks cheap")
+  c.textAlign='center';{const m='Your home in the sky awaits';c.font=`600 ${u*7.2}px ${HG}`;const f=u*7.2*Math.min(1,w*.9/c.measureText(m).width);text(c,m,cx,cy,`600 ${f}px ${HG}`,'255,236,240',a,3);}cy+=u*11;
+  if(tall){text(c,'9,000,000 FAMILIES MOVED UP',cx,cy,`600 ${u*5}px ${MONO}`,PEACH,a*.85,2);cy+=u*12;}
+  signoff(c,x,y,w,h,'FINANCIAL',PEACH,a);
+  return 'rgba(255,140,180,A)';}
+
+/* ---------- on the boards ---------- */
+const CAMPS={dawn,beauty,home},ORDER=['dawn','beauty','home'];let turn=0;
+function art(c,b,a,t,i,ad){
+  const name=ad?(ad.camp||(ad.camp=ORDER[(turn++)%ORDER.length])):'dawn',u0=ad?Math.max(0,Math.min(1,(t-ad.t)/(ad.dur||6))):null;
+  const v=ad?a:.32;   // (resting between ads: the brand film, dim)
+  c.save();c.beginPath();c.rect(b.x,b.y,b.w,b.h);c.clip();
+  const L=CAMPS[name](c,b.x,b.y,b.w,b.h,v,u0,t,1234+i*977,ad?t-ad.t:null);
+  screen(c,b.x,b.y,b.w,b.h,t+i*3,v);
+  if(v<.6){c.fillStyle=`rgba(3,3,8,${(.6-v)*1.1})`;c.fillRect(b.x,b.y,b.w,b.h);}   // (a screen turned down)
+  c.restore();return L;}
+let on=!/#boards-now/.test(location.hash);
+function set(v){on=!!v;K.set({boardArt:on?art:null});}
+function play(name){const S=K._state,t=now();S.ads=S.ads.filter(a=>t-a.t>=a.dur+1.2);for(let i=0;i<3;i++)S.ads.push({t,dur:7,board:i,brand:'SAEBYEOK',camp:name});}
+set(on);window.FPSkyBoards={get on(){return on;},set,play};
 })();
 
 /* ===== scenes/penthouse/room1/ascent-luxe-everyday.js ===== */
