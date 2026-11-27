@@ -890,7 +890,6 @@ svg.pu{width:12px;height:12px;color:rgb(var(--pu));flex:none;vertical-align:-2px
 @keyframes lcardIn{from{opacity:0}}
 .lmsg .from{display:flex;align-items:center;gap:8px;font-family:var(--f-data);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgb(var(--pu))}
 .lmsg .from svg{width:15px;height:15px}
-.lmsg .from time{color:var(--dim)}
 .ldot{width:6px;height:6px;border-radius:50%;background:#3a3020;margin-left:auto}
 .ldot.on{background:rgb(var(--pu));box-shadow:0 0 8px rgb(var(--pu))}
 .lsaid{margin:0;font-size:clamp(14px,2.5cqh,17px);line-height:1.5;color:#f0f4fa;text-shadow:0 1px 2px rgba(0,0,0,.6)}
@@ -1032,7 +1031,6 @@ html,body{height:100%;overflow:hidden;background:#000}
   box-shadow:0 0 28px rgba(97,227,255,.12),inset 0 0 22px rgba(97,227,255,.06)}
 .lift .lmsg::before,.lift .lmsg::after{border-color:rgba(130,235,255,.75)}
 .lift .lmsg .from{color:rgba(130,235,255,.85);font-size:9px;letter-spacing:.2em;white-space:nowrap}
-.lift .lmsg .from time{color:rgba(150,200,220,.6)}
 .lift .lmsg .ldot{background:#1d3a44}.lift .lmsg .ldot.on{background:var(--scan);box-shadow:0 0 8px var(--scan)}
 .lift .lmsg.ringing .ldot{animation:holoRing 1.25s ease-in-out infinite}@keyframes holoRing{0%,100%{background:#1d3a44;box-shadow:none}30%{background:var(--scan);box-shadow:0 0 10px var(--scan)}}
 .lift .lsaid{color:rgba(215,245,255,.9);text-shadow:0 0 9px rgba(97,227,255,.45),0 1px 2px rgba(0,0,0,.6);font-size:clamp(13px,2.3cqh,16px)}
@@ -1434,7 +1432,7 @@ html,body{height:100%;overflow:hidden;background:#000}
       </div>
       <div class="lflood" id="liftFlood"></div>
       <div class="lmsg" id="liftMsg" aria-live="polite" hidden>
-        <span class="from"><svg class="pu" viewBox="0 0 100 100" aria-hidden="true"><use href="#puMark"/></svg>Kang · PUREUM · secure line <time>02:36</time><i class="ldot" id="liftDot"></i></span>
+        <span class="from"><svg class="pu" viewBox="0 0 100 100" aria-hidden="true"><use href="#puMark"/></svg>Kang · PUREUM · secure line<i class="ldot" id="liftDot"></i></span>
         <p class="lsaid" id="liftSaid"></p>
         <span class="lnext" id="liftNext">Tap to continue</span>
       </div>
@@ -1485,7 +1483,7 @@ html,body{height:100%;overflow:hidden;background:#000}
         <span class="eyebrow">Neo Seoul · 02:38</span>
         <h1 class="title">FALSE PARALLEL</h1>
         <p>A burglary at the penthouse of Block A17 has locked down the whole tower. The owner, Yoon Seo-a, is a PUREUM executive, and no one can reach her. Her door can't be overridden. PUREUM has hired you to find out what was taken and who took it.</p>
-        <div class="msg"><span class="from"><svg class="pu" viewBox="0 0 100 100" aria-hidden="true"><use href="#puMark"/></svg>Kang · PUREUM <time>02:36</time></span>
+        <div class="msg"><span class="from"><svg class="pu" viewBox="0 0 100 100" aria-hidden="true"><use href="#puMark"/></svg>Kang · PUREUM</span>
           <p>A case was taken from her vault tonight. Don't ask what's in it. Find out who has it. Seo-a is not your concern.</p>
           <p>You have a PUREUM Canopy. It finds and draws power, and it sees heat. It's company property. Don't lose it.</p></div>
         <button class="btn btn-primary" id="btnStart">Start at Seo-a's front door</button>
@@ -1503,15 +1501,7 @@ html,body{height:100%;overflow:hidden;background:#000}
           <div><b id="stHints">0</b><span>Hints</span></div>
           <div><b id="stWrong">0</b><span>Wrong codes</span></div>
         </div>
-        <dl class="evidence">
-          <div class="head"><span>Evidence 01 / 04</span><span>Door log</span></div>
-          <dt>Entered</dt><dd>01:52 · guest code 2</dd>
-          <dt>Owner code</dt><dd>Not used tonight</dd>
-          <dt>Left</dt><dd>01:58:52</dd>
-          <dt>Then</dt><dd>The emergency stairs, going down</dd>
-          <dt>Now</dt><dd>Still in the tower: it sealed at 01:58:41</dd>
-        </dl>
-        <p>Someone walked in with a guest code at 01:52. Seconds after the case left the vault, they walked out and took the stairs down. The tower is sealed, so they are still inside. Next room: the living room.</p>
+        <!-- (no recap of the evidence here: the owner, 22 Nov 2026, "that doesn't feel like it adds anything") -->
         <div class="msg"><span class="from"><svg class="pu" viewBox="0 0 100 100" aria-hidden="true"><use href="#puMark"/></svg>Kang · PUREUM</span><p>Still in the tower. Good. Now find my case.</p></div>
         <button class="btn btn-primary" id="btnAgain">Play again</button>
       </div>
@@ -2315,7 +2305,7 @@ function withVary(n,fn){const now=ctx.currentTime;THIN=now-(lastAt[n]||-9)<1;las
   const k=rrN[n]=((rrN[n]||0)+1)%4;VP=Math.pow(2,(RRC[k]+rnd(-6,6))/1200);GV=Math.pow(10,rnd(-1.2,1.2)/20);PANOFF=placeOf(n);
   try{return fn();}finally{VP=1;GV=1;PANOFF=0;THIN=false;}}
 // levels for the reworked sounds, set by measuring them beside the game's old ones
-const GAIN={zoomIn:1.6,zoomOut:1.6,tap:1.3,select:1.3,coverSlide:2.5,coverBump:1.8,plateSlide:2.5,plateBack:1.8,metalTap:2,doors:2.5,charged:2,membrane:1.5,sense:1.6,draw:1.6};
+const GAIN={zoomIn:1.6,zoomOut:1.6,tap:1.3,select:1.3,coverSlide:2.5,coverBump:1.8,plateSlide:2.5,plateBack:1.8,metalTap:2,doors:1.6,charged:2,membrane:1.5,sense:1.6,draw:1.6,chime:.63,close:.67,dive:.8};   // (the arrival's, 22 Nov 2026: level with the seal opening, the room's biggest moment)
 const withGain=(n,fn)=>{G=GAIN[n]||1;try{return fn();}finally{G=1;}};
 
 /* ---------- puzzle sounds (inside the lobby), in B ----------
@@ -2344,8 +2334,52 @@ const FOLEY={
   evidence:t=>{const b=keepOut();osc(880,t,.6,.012,{out:b});osc(1318.5,t+.08,.7,.01,{out:b});},
   hint:t=>{const b=keepOut();osc(880,t,.25,.01,{out:b});osc(1175,t+.12,.35,.01,{out:b});},
   scannerOn:t=>{const b=keepOut();osc(500,t,.14,.02,{f2:1800,out:b});tick(3000,t,.005,b);},
-  scannerOff:t=>osc(1500,t,.14,.018,{f2:450,out:keepOut()})
+  scannerOff:t=>osc(1500,t,.14,.018,{f2:450,out:keepOut()}),
+  /* the arrival's sounds and the ride's chime and doors, in B: designed and heard in the sound review (14 Nov 2026,
+     palette B and round 12: mockups/archive/sound-review/room1-sound-audio.js) and held back when B was built into the
+     game, to come with the elevator cutscene; brought in 22 Nov 2026 (the owner: "Didn't we make sounds for the floor plan
+     though?"). Played only while the arrival's mix is on (lift.js, setArrivalMix; the cues in Room 1's sound-cues.js). */
+  // the plan renders: a fast stream of blips climbing D minor, then a two-note "done"
+  plan:(t,o={})=>{const d=o.dur||1.8,b=vo({lp:3600,delay:.22}),pool=[74,77,79,81,84,86,88,89,91,93,96,98],n=Math.floor(d/.05);
+    for(let i=0;i<n;i++){const u=i/n,j=Math.floor(u*7)+Math.floor(Math.random()*5);sq(M(pool[Math.min(pool.length-1,j)]),t+i*.05,.022,.0045,b);}
+    const e=vo({lp:4000,delay:.35,verb:.2});sq(M(86),t+d,.05,.007,e);sq(M(93),t+d+.07,.08,.007,e);},
+  // YOU ARE HERE: a lock-on chirp and a clean ping
+  you:(t)=>{const b=vo({lp:4200,delay:.3});[0,2,4].forEach((k,i)=>sq(C(k,86),t+i*.045,.03,.008,b));osc(C(4,86),t+.16,.3,.006,{out:vo({delay:.4,verb:.2})});},
+  step:(t)=>{const b=vo({lp:5000});tick(3200,t,.006,b);tick(3200,t+.3,.005,b);},
+  // the dive: a riser whose pulse quickens, landing on a soft sub hit and a short glitch
+  dive:(t,o={})=>{const d=o.dur||1.5,b=vo({verb:.25}),os=ctx.createOscillator(),g=ctx.createGain(),tr=ctx.createGain(),l=ctx.createOscillator(),lg=ctx.createGain();
+    os.frequency.setValueAtTime(220,t);os.frequency.exponentialRampToValueAtTime(1760,t+d);l.type='square';l.frequency.setValueAtTime(6,t);l.frequency.exponentialRampToValueAtTime(32,t+d);lg.gain.value=.5;tr.gain.value=.5;l.connect(lg).connect(tr.gain);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.007,t+d*.9);g.gain.linearRampToValueAtTime(0,t+d+.02);os.connect(tr).connect(g).connect(b);os.start(t);l.start(t);os.stop(t+d+.1);l.stop(t+d+.1);
+    osc(110,t+d,.28,.035,{f2:55,att:.003,out:vo()});const c=vo({crush:40,lp:6000,delay:.3});for(let i=0;i<6;i++)sq(rnd(1800,4200),t+d+i*.03,.015,.004,c);},
+  // the elevator closes behind you (round 9, 14 Nov 2026: the hatch was scrapped, "it doesn't sound like an elevator to a
+  // luxury penthouse anymore ... it needs to be premium"). A luxury elevator's doors are nearly silent: they glide on a warm,
+  // barely-there swell (two soft tones a fifth apart, on the score's chord); they slow and meet softly, cushioned, with a
+  // rounded low touch and no slam or metal; one discreet magnetic latch, felt more than heard; then a single soft, rich bell
+  // settles into the lobby, low and unhurried. No hiss, no clatter, nothing mechanical.
+  close:(t,o={})=>{const d=o.dur||1.9,p=panAt(1270),e=t+d;
+    // the glide: a warm swell, now three tones wide (the root under, the root, the fifth), each a detuned pair spread around you
+    {const g=ctx.createGain(),lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1000;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(1,t+.7);g.gain.setValueAtTime(1,e-.5);g.gain.linearRampToValueAtTime(0,e+.2);
+     lp.connect(g);g.connect(vo({pan:p,verb:.3}));
+     [[C(0,50),.004,'triangle'],[C(0,62),.0035,'sine'],[C(2,62),.0024,'sine']].forEach(([f,a,ty],i)=>{for(const det of [-5,5]){const pn=ctx.createStereoPanner();pn.pan.value=clamp(p+det/5*(.35+i*.15),-1,1);pn.connect(lp);osc(f,t,d+.15,a,{type:ty,att:.7,det,out:pn});}});}
+    // they meet, cushioned: a soft sub and a rounded low touch, with a felt-like body
+    osc(78,e-.04,.35,.03,{f2:62,att:.03,out:vo({pan:p})});osc(150,e-.04,.26,.03,{f2:118,att:.03,out:vo({pan:p,lp:500})});osc(300,e-.04,.14,.007,{type:'triangle',att:.025,out:vo({pan:p,lp:700})});
+    // one discreet magnetic latch, with a small body under it
+    tick(1900,e+.16,.0035,vo({pan:p,lp:2600}));osc(640,e+.16,.035,.004,{att:.002,out:vo({pan:p})});osc(220,e+.16,.08,.008,{att:.004,out:vo({pan:p,lp:600})});
+    // the bell: a soft, rich chord of bells (root, fifth, the root an octave down), spread around you, with a long, quiet tail
+    const bl=vo({pan:p*.5,verb:.45,delay:.12});fmb(C(0,74),e+.32,2.8,.009,bl,{ratio:2.01,index:.55});fmb(C(0,62),e+.32,2.4,.006,vo({pan:p*.5-.3,verb:.45}),{ratio:2.01,index:.35});
+    fmb(C(2,62),e+.36,2.4,.004,vo({pan:p*.5+.35,verb:.45}),{ratio:2.01,index:.35});fmb(C(0,50),e+.32,2,.006,vo({pan:p*.5,verb:.3,lp:900}),{ratio:1,index:.3});
+    at(e,()=>duck('ambDuck',.85,.4,.06,.8));},
+  // LOCKDOWN: "access locked", two crushed notes falling, a soft sub hit, a low detuned hold fading
+  lockdown:(t)=>{const c=vo({crush:30,lp:1800,delay:.25});sq(440,t,.12,.009,c);sq(293.7,t+.14,.18,.009,c);osc(80,t+.14,.32,.04,{f2:45,out:vo()});
+    for(const det of [-8,8]){const os=ctx.createOscillator(),g=ctx.createGain();os.type='square';os.frequency.value=146.83;os.detune.value=det;g.gain.setValueAtTime(0,t+.3);g.gain.linearRampToValueAtTime(.004,t+.45);g.gain.exponentialRampToValueAtTime(.0001,t+2.6);
+      os.connect(g).connect(vo({lp:700,verb:.3}));os.start(t+.3);os.stop(t+2.7);}
+    duck('ambDuck',.75,.8,.05,1);duck('cityDuck',.7,2.5);},
+  // the arrival chime (round 12: premium bells): the chord's root then its second, left then right, each with a soft bell an octave under
+  chime:t=>{bellB(C(0,81),t,.009,-.25);bellB(C(1,81),t+.42,.008,.25);richB('chime',t+.42);},
+  // the doors at the top part (round 12: a tone, not a motor): four notes rising, then a tick; spread outward as the halves part
+  doors:t=>{[74,77,81,86].forEach((m,i)=>sq(M(m),t+i*.1,.05,.005,vo({lp:3600,delay:.25,pan:[-.15,.3,-.5,.7][i]})));tick(3000,t+.45,.006,vo());}
 };
+const bellB=(f,t,amp,pan=0)=>{fmb(f,t,2.4,amp,vo({pan,verb:.45,delay:.12}),{ratio:2.01,index:.55});fmb(f/2,t+.01,2,amp*.55,vo({pan:-pan,verb:.4,lp:1200}),{ratio:2.01,index:.35});};
 // the old cube's sounds, unchanged (no longer in Room 1's puzzles)
 const LEGACY={
   release:t=>{click(t,.05,1800);motor(t+.08,.7,110,240,.025,30);hiss(t+.5,.7,.02,{f:1400,f2:700,q:.6,att:.15});},
@@ -2689,6 +2723,7 @@ function liftReveal(){
   if(liftMus)liftMus.reveal(t+.8);
 }
 function liftArrive(){
+  if(ARRMIX)return arriveMix();
   if(!nodes)return;const t=ctx.currentTime;
   if(liftV){liftV.motor.forEach(o=>o.frequency.setTargetAtTime(o.frequency.value*.9,t,.6));liftV.out.gain.setTargetAtTime(0,t+.6,.5);liftV.wg.gain.setTargetAtTime(0,t,.5);}
   lvStop(1);driveStop();   // (the level's sounds and the drive fade as the capsule stops)
@@ -2697,14 +2732,14 @@ function liftArrive(){
   motor(t+3.4,1.2,95,70,.016);hiss(t+3.4,1.1,.02,{f:900,f2:500,q:.7,att:.2});                                                 // the doors behind you part
   nodes.near.gain.setTargetAtTime(1,t+2,.8);nodes.glass.frequency.setTargetAtTime(1700,t+2,.8);nodes.glassShelf.gain.setTargetAtTime(-5,t+2,.8);
 }
-function liftTurn(){if(!nodes)return;hiss(ctx.currentTime,2.1,.014,{f:500,f2:1500,q:.6,att:.9});}   // turning around in the capsule (a full half-turn, 2.4 s)
+function liftTurn(){if(ARRMIX)return diveMix();if(!nodes)return;hiss(ctx.currentTime,2.1,.014,{f:500,f2:1500,q:.6,att:.9});}   // turning around in the capsule (a full half-turn, 2.4 s)
 function liftEnd(){ // the ride is over (or skipped): stop the cab, put the glass back, let the city's events return gently
   inRide=false;curLevel=null;applyPlace(.6);
   if(!nodes)return;const t=ctx.currentTime;
   if(liftV){const v=liftV;liftV=null;v.out.gain.setTargetAtTime(0,t,.3);setTimeout(()=>v.srcs.forEach(s=>{try{s.stop();}catch(e){}}),1500);}
   nodes.near.gain.setTargetAtTime(1,t,.6);nodes.glass.frequency.setTargetAtTime(1700,t,.6);nodes.glassShelf.gain.setTargetAtTime(-5,t,.6);
   if(liftMus){liftMus.end(t);liftMus=null;}
-  lvStop(.6);lpStop(.3);driveStop();setRideRain(1,.8);   // (the rain as it was)
+  lvStop(.6);lpStop(.3);driveStop();if(ARRMIX&&arrHeld)releaseMix(t);else setRideRain(1,.8);   // (the rain as it was)
   if(scoreHeld){scoreHeld=false;loopN=0;sinceRest=0;nextLoop=t+.3;setLevels(2.2);}   // the score comes in on its first chord as the ride's theme fades
   spot.until=t;const soon={ad:rnd(10,16),siren:rnd(24,34),spinner:rnd(50,70)};for(const k in next)next[k]=t+(soon[k]??rnd(20,40));
 }
@@ -2871,12 +2906,46 @@ function liftTheme(t0){
     dip(len){const t=ctx.currentTime;for(const [p,v] of [[dip.gain,.85],[kL.gain,-9],[kH.gain,-9]]){const z=p===dip.gain?1:0;p.cancelScheduledValues(t);p.setValueAtTime(p.value,t);p.setTargetAtTime(v,t,.2);p.setTargetAtTime(z,t+len,.7);}},   // under Kang: his band steps back
     reveal(t){[[93,0],[98,1.1],[96,2.2]].forEach(([m,o])=>ping(m,t+o,.007,4));nextPing=Math.max(nextPing,t+5);
       padTo([74,81],t+.5,.006,5);padTo([88,93],t+1.5,.0035,6);},   // (the low bloom two octaves up, softer: it sat on his voice; one octave up still did)
-    arrive(t){pingOn=false;pulseOn=false;padTo([65,72],t,.006,2.5);ping(98,t+.2,.006,5);},
+    arrive(t,o={}){pingOn=false;pulseOn=false;padTo([65,72],t,.006,2.5);ping(98,t+(o.ping??.2),.006,5);},   // (o.ping: when its high D rings; the arrival mix moves it after the chime)
     end(t){clearInterval(timer);out.gain.cancelScheduledValues(t);out.gain.setValueAtTime(out.gain.value,t);out.gain.linearRampToValueAtTime(0,t+5);
       setTimeout(()=>{nodesOn.forEach(o=>{try{o.stop();}catch(e){}});pads.forEach(p=>{try{p.o.stop();p.o2.stop();}catch(e){}});},5600);}
   };}
 
-Object.assign(FP,{liftMembrane,liftDriveStyle,liftLounge,liftLevel,liftBegin,liftWind,liftWhoosh,liftReveal,liftArrive,liftTurn,liftEnd});
+/* ---------- the arrival's mix (built into the game 26 Nov 2026; reviewed 22 Nov 2026, the owner: "It's hard to hear the map sounds when it displays during
+   the elevator to room transition. Can we tighten up that mix for better spatial clarity and cinematic experience?") ----------
+   While the floor plan is on the glass, what you hear is the capsule arriving: its chime, the doors parting at 3.4 s, and a
+   swish as the view dives in. They were quiet and in the middle, under the rain, the city and the theme's last notes; the
+   theme's high D rang on the chime; and at the dive the rain, the city and the score all came back at once. With this mix
+   (setArrivalMix(true); off, the arrival is as before):
+   - docking: the outside steps back as the capsule stops: the glass closes to 1.1 kHz and the rain and the city drop
+     over about a second (5 dB, as the room made for Kang), held while the plan is up, so what happens in front of you
+     is clear
+   - the theme resolves under the chime, not on it: its pad as before, its high D after the chime has rung (1.5 s)
+   - the sounds are B's, as designed and heard in the sound review and held back until now (foley.js): the chime
+     (premium bells, left then right), the doors at the top (four rising notes, spread outward as the halves part),
+     the plan drawing itself, YOU ARE HERE, the step, the dive (in place of the turn's hiss), the elevator closing
+     behind you and LOCKDOWN (their cues and captions: Room 1's sound-cues.js)
+   - the lobby comes in by layers, not all at once: the score on its first chord as before, then, once the dive has
+     landed, the rain and the city back over about 3 s and the glass opening, as you face the glass wall */
+let ARRMIX=true,arrHeld=false;   // (on in the game since 26 Nov 2026, the owner: "This is good."; setArrivalMix(false) gives the arrival as it was)
+function setArrivalMix(v){ARRMIX=!!v;}
+const arrivalMixOn=()=>ARRMIX;
+function arriveMix(){if(!nodes)return;const t=ctx.currentTime;
+  if(liftV){liftV.motor.forEach(o=>o.frequency.setTargetAtTime(o.frequency.value*.9,t,.6));liftV.out.gain.setTargetAtTime(0,t+.6,.5);liftV.wg.gain.setTargetAtTime(0,t,.5);}
+  lvStop(1);driveStop();
+  // docking: the outside steps back, and stays back while the plan is up
+  nodes.near.gain.setTargetAtTime(1,t+.1,.4);nodes.glass.frequency.setTargetAtTime(1100,t+.1,.35);nodes.glassShelf.gain.setTargetAtTime(-5,t+.1,.4);
+  duck('ambDuck',.56,60,.9,2.4);duck('cityDuck',.56,60,.9,2.4);arrHeld=true;
+  if(liftMus)liftMus.arrive(t+.3,{ping:1.5});   // the theme resolves under the chime, not on it
+  at(t+.3,()=>foley('chime'));   // B's chime: premium bells, left then right
+  at(t+3.4,()=>foley('doors'));}   // B's doors at the top: four notes rising, spread outward as the halves part
+function diveMix(){}   // (the dive into the plan has its own sound, B's dive, from arrival:dive in Room 1's sound-cues.js)
+function releaseMix(t){arrHeld=false;   // the lobby, by layers: the score at once (liftEnd), then the rain and the city, and the glass opening
+  const r=t+1.5;   // (after the dive, 1.5 s)
+  for(const n of ['ambDuck','cityDuck']){const g=nodes[n].gain;g.cancelScheduledValues(t);g.setValueAtTime(g.value,t);g.setTargetAtTime(1,r,1);duckState[n]={until:r,to:1};}
+  nodes.glass.frequency.cancelScheduledValues(t);nodes.glass.frequency.setTargetAtTime(1700,r-.2,.7);nodes.glassShelf.gain.setTargetAtTime(-5,r-.2,.7);
+  setRideRain(1,1.1);}
+Object.assign(FP,{setArrivalMix,arrivalMixOn,liftMembrane,liftDriveStyle,liftLounge,liftLevel,liftBegin,liftWind,liftWhoosh,liftReveal,liftArrive,liftTurn,liftEnd});
 
 /* ===== audio/src/show.js ===== */
 /* False Parallel audio · skyline moments
@@ -6804,6 +6873,14 @@ if(A){
   cue('lift:arrive',()=>A.liftArrive());
   cue('lift:end',()=>A.liftEnd());
   cue('lift:arrived',()=>{A.setView('foyer');setTimeout(()=>A.lockdown(true),7000);});   // (the lockdown's presence, once in the lobby)
+  // the arrival in B: the floor plan, YOU ARE HERE, the step, the dive, the elevator closing behind you, LOCKDOWN. Designed in
+  // the sound review (14 Nov 2026), held back until 26 Nov 2026; heard while the arrival's mix is on (the game's default)
+  const ARR=()=>!!(A.arrivalMixOn&&A.arrivalMixOn()&&A.isPlaying());
+  cue('arrival:plan',d=>{if(!ARR())return;A.foley('plan',{dur:d.dur});setTimeout(()=>ARR()&&A.foley('you'),d.dur*300);});
+  cue('arrival:walk',()=>{if(ARR())A.foley('step');});
+  cue('arrival:dive',d=>{if(ARR()){A.hush(d.dur*.6);A.foley('dive',{dur:d.dur});}});
+  cue('arrival:close',d=>{if(!ARR())return;A.foley('close',{dur:d.dur});setTimeout(()=>A.hush(.75),1250);setTimeout(()=>scap('[The elevator seals behind you]'),(d.dur||1.9)*1000);});
+  cue('arrival:lock',()=>{if(!ARR())return;A.foley('lockdown');A.lockdown(true);scap('[Lockdown. The tower seals.]');});
   cue('kang:chirp',()=>A.kangChirp());
   cue('kang:ring',d=>{if(A.isPlaying())d.result=A.kangRing();});   // (his first call rings; the ride waits d.result seconds before he speaks)
   cue('kang:say',d=>{if(A.isPlaying())d.result=A.kangSay(d.text,'menace',{rate:d.rate,mode:d.mode});});   // (the ride reads the timing back from d.result; mode: how much of the line he sounds)
@@ -8135,7 +8212,9 @@ const ADS={
   ramyeon:{bg:['#2a0806','#8a1a10'],prod:'bowl',brand:'RED STORM 라면',line:'Three minutes to heaven',col:'255,140,90'},
   chicken:{bg:['#2a1606','#7a4a10'],prod:'chicken',brand:'CRISPY BOX 치킨',line:'치맥 · chicken and beer, 24 hours',col:'255,200,110'},
   credit:{bg:['#081a14','#0e4a36'],who:{name:'JUNO',hair:'short',l:'120,255,190',r:'255,214,120'},prod:'card',brand:'SAEBYEOK CREDIT',line:'Approved in one second',col:'140,255,200'}};
-function poster(id,w,h){if(PAINT.poster)return cached('ad2'+id+w+'x'+h,()=>PAINT.poster(ADS[id],w,h,id,PK));return cached('ad'+id+w+'x'+h,()=>{const A=ADS[id],c=cv(w,h),q=c.getContext('2d'),wide=w>h*1.2,m=Math.min(w,h);
+// (review hook, 21 Nov 2026: setPoster(id, fn) redraws one ad its own way; fn.v names the version, so switching redraws it)
+const POVR={};
+function poster(id,w,h){if(POVR[id])return cached('ad3'+id+w+'x'+h+(POVR[id].v||''),()=>POVR[id](ADS[id],w,h,id,PK));if(PAINT.poster)return cached('ad2'+id+w+'x'+h,()=>PAINT.poster(ADS[id],w,h,id,PK));return cached('ad'+id+w+'x'+h,()=>{const A=ADS[id],c=cv(w,h),q=c.getContext('2d'),wide=w>h*1.2,m=Math.min(w,h);
   const g=q.createLinearGradient(0,0,wide?w:0,wide?0:h);g.addColorStop(0,A.bg[0]);g.addColorStop(1,A.bg[1]);q.fillStyle=g;q.fillRect(0,0,w,h);
   q.globalCompositeOperation='lighter';for(let i=0;i<9;i++){const x=h01(i,id.length)*w,y=h01(i+5,id.length)*h,r=m*(.05+h01(i,3)*.12),gg=q.createRadialGradient(x,y,0,x,y,r);gg.addColorStop(0,`rgba(${A.col},.22)`);gg.addColorStop(1,`rgba(${A.col},0)`);q.fillStyle=gg;q.fillRect(x-r,y-r,r*2,r*2);}q.globalCompositeOperation='source-over';   // soft lights behind
   const fx=wide?w*.24:w*.42,fb=wide?h:h*.72,fh=wide?h*.95:h*.66;
@@ -8489,7 +8568,7 @@ function front(q,V){if(V.alt>60)return;tick(V);const {T}=V;
   if(XTRA)XTRA(items,q,V,T,'front');
   items.sort((a,b)=>b.d-a.d);for(const it of items)it.f();}
 function heroes(V){const {X,Y,alt}=V,r=[];if(alt<45){r.push({x0:X(-13,XW[1]),y0:Y(2.4,XW[1]),x1:X(13,ZN[0]),y1:Y(0,ZN[0]),w:1});}if(alt<14)r.push({x0:0,y0:Y(1.6,AV.d1),x1:V.W,y1:Y(0,AV.d0),w:.8});return r;}
-return{back,front,podium,heroes,BASE,setExtra(f){XTRA=f||null;},setPaint(o){PAINT=o||{};},setCars(o){CARS2=o||null;},setBlock(f){BLK=f||null;},kit:{drawCar,glow,smear,box,poly,fogA,KINDS,PLAZA,AV,FACE,WALL},setPed(f){PED=f||null;},setMove(f){PMOVE=f||null;},addPed(p,near){(near?QUEUE:MILL).push(p);},removePed(p){for(const L of [QUEUE,MILL]){const i=L.indexOf(p);if(i>=0)L.splice(i,1);}}};
+return{back,front,podium,heroes,BASE,setExtra(f){XTRA=f||null;},setPaint(o){PAINT=o||{};},setPoster(id,f){if(f)POVR[id]=f;else delete POVR[id];},setCars(o){CARS2=o||null;},setBlock(f){BLK=f||null;},kit:{drawCar,glow,smear,box,poly,fogA,KINDS,PLAZA,AV,FACE,WALL},setPed(f){PED=f||null;},setMove(f){PMOVE=f||null;},addPed(p,near){(near?QUEUE:MILL).push(p);},removePed(p){for(const L of [QUEUE,MILL]){const i=L.indexOf(p);if(i>=0)L.splice(i,1);}}};
 })();
 
 /* ===== scenes/penthouse/room1/ascent.js ===== */
@@ -11105,7 +11184,7 @@ function flower(c,cx,cy,r,a){   // its mark: an oleander flower, five petals tur
 function oleanderOff(c,x,y,w,h,line,a){const u=w/100,bh=BAND(w),by=y+h-bh,cx=x+w/2;
   c.fillStyle='rgba(8,8,14,.84)';c.fillRect(x,by,w,bh);
   lit(c,PEARL,.5,a*.6,()=>{c.moveTo(x+w*.2,by+u*2);c.lineTo(x+w*.8,by+u*2);});
-  flower(c,cx,by+u*11,u*7,a);
+  if(window.FPOleander&&FPOleander.on)FPOleander.mark(c,cx,by+u*11,u*7.5,(col,lw,draw)=>lit(c,col,lw,a,draw));else flower(c,cx,by+u*11,u*7,a);   // (review hook, 21 Nov 2026: OLEANDER's redrawn mark, oleander-look.js)
   c.textBaseline='alphabetic';spaced(c,'OLEANDER',cx,by+u*27,`500 ${u*9}px ${HG}`,u*2,PEARL,a,5);
   c.textAlign='center';text(c,line,cx,by+u*36.5,`500 ${u*5.4}px ${MONO}`,ICE,a*.85,2);}
 /* (was SAEBYEOK BEAUTY; the ride's RAE poster is OLEANDER too) */
@@ -11230,6 +11309,120 @@ const K=window.FPSkyline;if(!K||!K.rebuild)return;
 let on=!/#skysigns-now/.test(location.hash);
 function set(v){on=!!v;K.set({signFix:on});K.rebuild();}
 set(on);window.FPSkySigns={get on(){return on;},set};
+})();
+
+/* ===== scenes/penthouse/room1/oleander-look.js ===== */
+/* Built into the game 26 Nov 2026 (the owner: "Publish all"). First reviewed as a mockup (21 Nov 2026, the owner: "The Rae poster looks awful. We need it to be an outline of a celebrity-esque
+   face with desired features as the focus of the poster. The logo could also be better designed. And the mottos text is
+   quite basic compared to the rest."). Through FPStreet.setPoster (ascent-street.js) and the mark hook in
+   skyline-boards.js; without this file the poster and the mark are as they
+   were.
+   OLEANDER's poster in the ride (RAE, its serum), redrawn:
+   - RAE's face, front on, drawn as lines of light like a fashion illustration: her sleek bob in lilac, brows, almond
+     eyes with a winged line and a catch of light, the line of her nose, full lips, glossed; her neck and shoulders
+   - the features it sells are the focus: her skin lit from within on the cheekbones, down the nose and on the brow, glints
+     of light on it, and three fine callouts as a beauty scan would mark them: SMOOTH, LUMINOUS, LIFTED
+   - the words set like a luxury ad: GLASS SKIN in thin letters spaced wide, then "with" in rose italic leading into the
+     sign-off, so it reads Glass skin with OLEANDER (the owner, 22 Nov 2026: no "in 7 days", no "with RAE")
+   - OLEANDER's mark redrawn: the oleander's five petals turning like a pinwheel, as the flower grows, around a fringed
+     heart; its name spaced wide and thin beneath. The tower billboards' sign-off uses the same mark.
+   The wide strip on the plaza's pillars gets the same parts side by side. Nothing on it says the oleander is poison.
+   FPOleander.set(false) shows the poster and the mark as they are (#oleander-now starts that way). */
+(function(){
+'use strict';
+const TAU=Math.PI*2,EN='"Unbounded","Arial Black",sans-serif',MONO='"Azeret Mono",monospace',HG='"Hanken Grotesk","Noto Sans KR",sans-serif';
+const PEARL='236,240,255',ICE='170,215,255',ROSE='255,182,200',LILAC='190,160,255',K=2;   // (K: drawn at twice its size, so it stays sharp on big screens)
+
+/* ---------- OLEANDER's mark: five petals turning like a pinwheel, a fringed heart ---------- */
+// stroke(col, width, draw) draws a path in light, the way the caller draws light
+function mark(q,cx,cy,r,stroke){
+  for(let k=0;k<5;k++){const g=-Math.PI/2+k*TAU/5,c=Math.cos(g),s=Math.sin(g),P=(x,y)=>[cx+x*c-y*s,cy+x*s+y*c];
+    stroke(PEARL,r*.075,()=>{q.moveTo(...P(r*.16,-r*.04));q.bezierCurveTo(...P(r*.28,-r*.56),...P(r*.9,-r*.8),...P(r*1.03,-r*.3));q.bezierCurveTo(...P(r*1.08,r*.02),...P(r*.72,r*.24),...P(r*.44,r*.17));q.quadraticCurveTo(...P(r*.26,r*.12),...P(r*.16,-r*.04));});
+    stroke(ROSE,r*.05,()=>{q.moveTo(...P(r*.3,-r*.08));q.quadraticCurveTo(...P(r*.56,-r*.3),...P(r*.8,-r*.34));});}   // (a vein of rose in each petal)
+  stroke(ROSE,r*.07,()=>{q.moveTo(cx+r*.15,cy);q.arc(cx,cy,r*.15,0,TAU);
+    for(let k=0;k<5;k++){const g=-Math.PI/2+(k+.5)*TAU/5;q.moveTo(cx+Math.cos(g)*r*.17,cy+Math.sin(g)*r*.17);q.lineTo(cx+Math.cos(g)*r*.3,cy+Math.sin(g)*r*.3);}});}   // (its fringed heart)
+
+/* ---------- drawn in light, on a poster canvas ---------- */
+function kit(q){
+  const line=(col,lw,draw,a=1)=>{q.save();q.globalAlpha=a;q.lineJoin='round';q.lineCap='round';q.beginPath();draw();q.shadowColor=`rgb(${col})`;q.shadowBlur=lw*5*K;q.strokeStyle=`rgba(${col},.92)`;q.lineWidth=lw;q.stroke();
+    q.shadowBlur=0;q.strokeStyle='rgba(255,255,255,.6)';q.lineWidth=lw*.38;q.stroke();q.restore();};
+  const glow=(x,y,r,col,a)=>{const g=q.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${col},${a})`);g.addColorStop(1,`rgba(${col},0)`);q.fillStyle=g;q.fillRect(x-r,y-r,r*2,r*2);};
+  const text=(t,x,y,font,col,a=1,blur=3)=>{q.save();q.globalAlpha=a;q.font=font;q.shadowColor=`rgb(${col})`;q.shadowBlur=blur*K;q.fillStyle=`rgba(${col},.95)`;q.fillText(t,x,y);q.restore();};
+  const tube=(t,x,y,size,col)=>{q.save();q.lineJoin='round';q.fillStyle=`rgba(${col},.22)`;q.fillText(t,x,y);q.shadowColor=`rgb(${col})`;q.shadowBlur=size*.45*K;q.strokeStyle=`rgba(${col},.95)`;q.lineWidth=Math.max(.6,size*.07);q.strokeText(t,x,y);
+    q.shadowBlur=0;q.strokeStyle='rgba(255,255,255,.72)';q.lineWidth=Math.max(.3,size*.022);q.strokeText(t,x,y);q.restore();};
+  const spaced=(t,cx,y,font,sp,col,a=1,blur=4)=>{q.save();q.font=font;const ch=[...t],ws=ch.map(x=>q.measureText(x).width),tw=ws.reduce((p,v)=>p+v,0)+sp*(ch.length-1);let x=cx-tw/2;q.textAlign='left';ch.forEach((c,i)=>{text(c,x,y,font,col,a,blur);x+=ws[i]+sp;});q.restore();return tw;};
+  const spark=(x,y,r,a=1)=>line('255,250,255',r*.16,()=>{q.moveTo(x-r,y);q.lineTo(x+r,y);q.moveTo(x,y-r);q.lineTo(x,y+r);q.moveTo(x-r*.4,y-r*.4);q.lineTo(x+r*.4,y+r*.4);q.moveTo(x+r*.4,y-r*.4);q.lineTo(x-r*.4,y+r*.4);},a);
+  return{line,glow,text,tube,spaced,spark};}
+
+/* ---------- RAE: the face, front on, in lines of light ---------- */
+// centred on her face at (cx, cy); s: her face's half-width over 42; o.shoulders, o.callouts
+function face(q,L,cx,cy,s,o={}){const P=(x,y)=>[cx+x*s,cy+y*s],M=(x,y)=>q.moveTo(...P(x,y)),C=(a,b,c,d,e,f)=>q.bezierCurveTo(...P(a,b),...P(c,d),...P(e,f)),Q=(a,b,c,d)=>q.quadraticCurveTo(...P(a,b),...P(c,d)),T=(x,y)=>q.lineTo(...P(x,y));
+  L.glow(cx,cy-6*s,95*s,'200,170,255',.22);L.glow(cx,cy+8*s,60*s,'255,170,200',.16);   // (stage light behind her)
+  // the dark shape of her hair, head and shoulders, so the city doesn't show through her
+  q.save();q.fillStyle='rgba(10,7,16,.92)';q.beginPath();M(-58,46);C(-70,10,-70,-46,-40,-70);C(-20,-86,22,-86,44,-70);C(72,-46,70,10,58,46);T(24,58);T(24,92);
+  if(o.shoulders){C(40,104,74,108,86,124);T(-86,124);C(-74,108,-40,104,-24,92);}else{T(-24,92);}T(-24,58);q.closePath();q.fill();q.restore();
+  // her skin lit from within: what the poster sells
+  L.glow(...P(-25,12),20*s,PEARL,.42);L.glow(...P(25,12),20*s,PEARL,.42);L.glow(...P(0,-36),24*s,PEARL,.22);L.glow(...P(0,6),10*s,'255,255,255',.3);L.glow(...P(0,60),12*s,PEARL,.18);
+  // the sleek bob, parted to one side
+  L.line(LILAC,1.5*s,()=>{M(-50,48);C(-68,14,-70,-44,-40,-70);C(-20,-86,24,-86,44,-70);C(72,-46,68,14,52,48);Q(44,52,36,46);});
+  L.line(LILAC,1*s,()=>{M(10,-80);C(-14,-70,-36,-52,-44,-24);C(-48,0,-46,26,-40,44);M(10,-80);C(28,-66,42,-48,46,-22);C(49,4,48,28,44,44);
+    M(-56,30);C(-62,0,-60,-36,-40,-60);M(58,24);C(62,-8,58,-40,36,-64);},.8);
+  // the line of her face: temples, cheekbones lifted, a fine jaw, the chin
+  L.line(ROSE,1.3*s,()=>{M(-40,-26);C(-43,-4,-41,10,-37,22);C(-33,36,-20,54,0,63);C(20,54,33,36,37,22);C(41,10,43,-4,40,-26);});
+  L.line(ROSE,.9*s,()=>{M(-35,8);Q(-29,14,-22,15);M(35,8);Q(29,14,22,15);},.55);   // (the cheekbones)
+  // neck and shoulders, collarbones
+  L.line(ROSE,1.1*s,()=>{M(-17,56);C(-18,70,-20,82,-24,92);M(17,56);C(18,70,20,82,24,92);
+    if(o.shoulders){M(-24,92);C(-40,104,-74,108,-86,124);M(24,92);C(40,104,74,108,86,124);M(-30,104);Q(-16,108,-6,104);M(30,104);Q(16,108,6,104);}});
+  // brows, eyes (a winged line, the iris, a catch of light), lashes
+  for(const d of [-1,1]){const X=x=>x*d;
+    L.line(LILAC,1.4*s,()=>{M(X(9),-19);C(X(16),-24,X(28),-25,X(36),-18);});
+    L.line(ROSE,1.5*s,()=>{M(X(10),-4);C(X(15),-10,X(28),-11,X(34),-5);T(X(39),-9);});   // the upper lid and its wing
+    L.line(ROSE,.8*s,()=>{M(X(11),-3);C(X(17),1,X(27),1,X(33),-4);},.8);
+    L.line(PEARL,1*s,()=>{q.moveTo(...P(X(22)+4.6,-5));q.arc(...P(X(22),-5),4.6*s,0,Math.PI);});
+    q.save();q.fillStyle='rgba(255,255,255,.95)';q.shadowColor='#fff';q.shadowBlur=4*K;q.beginPath();q.arc(...P(X(22)-1.5,-6.4),1.1*s,0,TAU);q.fill();q.restore();
+    L.line(ROSE,.6*s,()=>{for(const [x,y] of [[28,-10],[31,-8.4],[34,-6.6]]){M(X(x),y);T(X(x+1.5),y-3);}},.7);}
+  // the nose: one line of light down it, the tip
+  L.line(PEARL,.9*s,()=>{M(-2,-6);C(-3,4,-4,14,-6,22);},.9);
+  L.line(ROSE,1*s,()=>{M(-8,25);Q(-4,29,0,28.5);Q(4,29,8,25);});
+  // the lips: full, glossed
+  q.save();const g=q.createLinearGradient(0,cy+34*s,0,cy+51*s);g.addColorStop(0,'rgba(255,120,170,.42)');g.addColorStop(1,'rgba(255,150,190,.3)');q.fillStyle=g;q.beginPath();
+  M(-15,41);C(-10,36,-5,35,0,37.5);C(5,35,10,36,15,41);C(10,50,-10,50,-15,41);q.fill();q.restore();
+  L.line(ROSE,1.3*s,()=>{M(-15,41);C(-10,36,-5,35,0,37.5);C(5,35,10,36,15,41);M(-15,41);C(-10,50,10,50,15,41);M(-15,41);Q(0,43,15,41);});
+  L.glow(...P(-3,45),5*s,'255,255,255',.55);L.line('255,255,255',.9*s,()=>{M(-6,45.5);Q(-2,46.6,3,45.6);},.8);   // (the gloss)
+  // glints on her skin
+  L.spark(...P(-27,10),3.4*s);L.spark(...P(1,26),2.2*s,.8);L.spark(...P(24,-34),2.6*s,.7);
+  // the callouts: fine lines from what it sells to its name, as a beauty scan would mark them
+  if(o.callouts){const call=(fx,fy,lx,ly,label,left)=>{L.line(ICE,.5*s,()=>{M(fx,fy);T(lx+(left?10:-10),ly);T(lx,ly);},.8);
+      q.save();q.fillStyle=`rgba(${ICE},.95)`;q.beginPath();q.arc(...P(fx,fy),1.3*s,0,TAU);q.fill();q.restore();
+      q.textAlign=left?'right':'left';L.text(label,...P(lx+(left?-2:2),ly+2.4),`600 ${6.4*s}px ${MONO}`,ICE,.95,2);};
+    call(-14,-40,-60,-56,'SMOOTH',true);call(27,12,62,0,'LUMINOUS',false);call(-30,40,-60,62,'LIFTED',true);}}
+
+/* ---------- the words, and the sign-off ---------- */
+function words(q,L,cx,wy,s){   // GLASS SKIN, then "with", which leads into the sign-off: Glass skin with OLEANDER (wy: where "with" sits)
+  q.textBaseline='alphabetic';L.spaced('GLASS SKIN',cx,wy-28*s,`500 ${21*s}px ${HG}`,5.6*s,PEARL,1,5);
+  q.textAlign='center';L.text('with',cx,wy,`italic 500 ${11*s}px ${HG}`,ROSE,.95,3);}
+function signoff(q,L,cx,y,s){mark(q,cx,y,10*s,(col,lw,draw)=>L.line(col,lw,draw));q.textBaseline='alphabetic';L.spaced('OLEANDER',cx,y+26*s,`500 ${14*s}px ${HG}`,4.4*s,PEARL,1,5);}
+
+/* ---------- the poster: portrait (240 x 320) on the towers and the shop fronts, the wide strip (620 x 124) on the pillars ---------- */
+function poster(A,w,h,id,PK){const c=PK.cv(w*K,h*K),q=c.getContext('2d');q.scale(K,K);const L=kit(q);
+  q.fillStyle='#07060c';q.fillRect(0,0,w,h);   // dark glass
+  if(w>h*1.6){   // the wide strip: her face, the words, the sign-off, side by side
+    L.glow(w*.5,h*.5,w*.4,'200,170,255',.1);
+    q.save();q.beginPath();q.rect(4,4,w-8,h-8);q.clip();face(q,L,92,h*.5+6,.82,{shoulders:true});q.restore();
+    q.textBaseline='alphabetic';L.spaced('GLASS SKIN',w*.47,h*.5+8,`500 ${22}px ${HG}`,6,PEARL,1,5);   // (it reads on: Glass skin, with OLEANDER)
+    const my=h*.48;q.textAlign='center';L.text('with',w*.82,my-20.6,`italic 500 ${11.5}px ${HG}`,ROSE,.95,3);signoff(q,L,w*.82,my,1.05);}
+  else{L.glow(w/2,h*.36,w*.7,'200,170,255',.12);
+    q.save();q.beginPath();q.rect(4,4,w-8,h-8);q.clip();face(q,L,w/2,h*.275,.9,{shoulders:true,callouts:true});q.restore();
+    q.fillStyle='rgba(7,6,12,.8)';q.fillRect(4,h*.6,w-8,h*.4-4);L.line(PEARL,.5,()=>{q.moveTo(w*.3,h*.6);q.lineTo(w*.7,h*.6);},.5);   // (a band of dark glass under her for the words)
+    words(q,L,w/2,h*.668+46,1);signoff(q,L,w/2,h*.873,.92);}
+  q.fillStyle='rgba(0,0,0,.18)';for(let y=0;y<h;y+=2)q.fillRect(0,y,w,.5);   // (fine scan lines)
+  L.line(PEARL,1.2,()=>q.rect(3,3,w-6,h-6),.7);   // a thin tube round the edge
+  return c;}
+poster.v='rae2';
+
+let on=!/#oleander-now/.test(location.hash);
+function set(v){on=!!v;window.FPStreet&&FPStreet.setPoster&&FPStreet.setPoster('rae',on?poster:null);}
+set(on);window.FPOleander={get on(){return on;},set,mark,poster};
 })();
 
 /* ===== scenes/penthouse/room1/ascent-luxe-everyday.js ===== */
